@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile containing roles and student DNA.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "displayName": { "type": "string" },
+        "onboardingComplete": { "type": "boolean" },
+        "studentDNA": {
+          "type": "object",
+          "properties": {
+            "dept": { "type": "string" },
+            "year": { "type": "string" },
+            "interests": { "type": "string" },
+            "experience": { "type": "string" },
+            "activities": { "type": "string" },
+            "goals": { "type": "string" },
+            "habits": { "type": "string" }
+          }
+        },
+        "dnaVector": { "type": "array", "items": { "type": "number" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Event published by club admins.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["General", "Course", "Seminar", "Competition", "Festival"] },
+        "venue": { "type": "string" },
+        "mentors": { "type": "string" },
+        "paymentScale": { "type": "string" },
+        "paymentDetails": { "type": "string" },
+        "skillsTargeted": { "type": "string" },
+        "dateTime": { "type": "string" },
+        "contact": {
+          "type": "object",
+          "properties": {
+            "whatsapp": { "type": "string" },
+            "email": { "type": "string" },
+            "joinLink": { "type": "string" }
+          }
+        },
+        "adminId": { "type": "string" },
+        "adminName": { "type": "string" },
+        "eventVector": { "type": "array", "items": { "type": "number" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "adminId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Matching notification for students.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "eventId": { "type": "string" },
+        "eventTitle": { "type": "string" },
+        "message": { "type": "string" },
+        "explanation": { "type": "string" },
+        "similarityScore": { "type": "number" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "EventFeedback": {
+      "title": "Event Feedback",
+      "description": "Feedback submitted by students for events.",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "userId", "rating", "comment"]
+    },
+    "CareerResource": {
+      "title": "Career Resource",
+      "description": "A resource link or guide for career development.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "url": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["title", "category", "url"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Published events"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Student notifications"
+    },
+    "/eventFeedback/{feedbackId}": {
+      "schema": "EventFeedback",
+      "description": "Student feedback for events"
+    },
+    "/careerResources/{resourceId}": {
+      "schema": "CareerResource",
+      "description": "Career resources for RU students"
+    }
+  }
+}

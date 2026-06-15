@@ -1,0 +1,16 @@
+{
+  "name": "RU Informer - Campus Intelligence",
+  "short_name": "RU Informer",
+  "description": "Rajshahi University Career Intelligence Node",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fbfa",
+  "theme_color": "#004d39",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/isometric/512/graduation-cap.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

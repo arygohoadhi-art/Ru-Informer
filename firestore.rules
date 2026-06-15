@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserData().data.role == 'admin';
+    }
+
+    function isStaff() {
+      return isAdmin() || (isSignedIn() && request.auth.token.email == 'arygohoadhi@gmail.com');
+    }
+
+    function isValidFeedback(data) {
+      return data.eventId is string && 
+             data.userId == request.auth.uid && 
+             data.rating is number && 
+             data.rating >= 1 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() <= 1000;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && isStaff();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isStaff();
+    }
+
+    // Events collection
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff();
+      allow update, delete: if isStaff();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isStaff();
+      allow update: if isOwner(resource.data.userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Event feedback collection
+    match /eventFeedback/{feedbackId} {
+      allow list: if isSignedIn() && (isStaff() || resource.data.userId == request.auth.uid);
+      allow get: if isSignedIn() && (isStaff() || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidFeedback(request.resource.data);
+      allow delete: if isStaff() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    function isValidCareerResource(data) {
+      return data.keys().hasAll(['title', 'category', 'url', 'description']) &&
+             data.title is string && data.title.size() <= 200;
+    }
+
+    // Career resources collection
+    match /careerResources/{resourceId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isStaff();
+    }
+  }
+}
