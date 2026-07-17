@@ -631,72 +631,23 @@ export default function AuthorDashboard({ profile, activeRoleView, onRoleChange 
 
       {/* Main Content Area */}
       <main className="flex-1 px-4 md:px-12 py-6 md:py-10 bg-[#fbfcfb] min-h-screen overflow-y-auto">
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 gap-4">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-display font-black text-[#006a4e] flex items-center gap-3">
-              {activeTab === "insights" && <>✍️ Author Insights Studio</>}
-              {activeTab === "events" && <>📅 Campus Event Creator</>}
-              {activeTab === "feeds" && <>📢 Club History & Feeds</>}
-              {activeTab === "media" && <>📁 Media Resource Hub</>}
-            </h2>
-            <p className="text-sm text-gray-400 font-medium mt-1 italic">
-              {activeTab === "insights" && "Share research, career suggestions, hacks, and guidance directly to Rajshahi University students."}
-              {activeTab === "events" && "Create and match skill-oriented events with students based on their profile DNA (90%+ Similarity Matches)."}
-              {activeTab === "feeds" && "Publish achievements, histories, ceremony galas, and latest announcements to club feeds."}
-              {activeTab === "media" && "Feed and upload academic or extra-curricular resources (PDFs, Word files, Video lectures, Audio, Websites) for student discovery."}
-            </p>
+        {/* ACTION CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+             <h3 className="font-black text-gray-900 text-lg">Create Content</h3>
+             <div className="grid grid-cols-2 gap-4">
+               <button onClick={() => { setActiveTab("events"); setShowEventForm(true); }} className="p-4 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs">New Event</button>
+               <button onClick={() => { setActiveTab("insights"); setShowForm(true); }} className="p-4 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs">New Insight</button>
+             </div>
           </div>
-
-          <div>
-            {activeTab === "insights" && (
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className={cn(
-                  "flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-black transition-all shadow-lg active:scale-95 group w-full md:w-auto",
-                  showForm ? "bg-red-500 text-white" : "bg-[#ffd700] text-[#006a4e]"
-                )}
-              >
-                {showForm ? "Close Form" : <><Plus className="w-5 h-5" /> Write Insight Article</>}
-              </button>
-            )}
-
-            {activeTab === "events" && (
-              <button
-                onClick={() => setShowEventForm(!showEventForm)}
-                className={cn(
-                  "flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-black transition-all shadow-lg active:scale-95 group w-full md:w-auto",
-                  showEventForm ? "bg-red-500 text-white" : "bg-[#ffd700] text-[#006a4e]"
-                )}
-              >
-                {showEventForm ? "Close Form" : <><Plus className="w-5 h-5" /> Create New Event</>}
-              </button>
-            )}
-
-            {activeTab === "feeds" && (
-              <button
-                onClick={() => setShowFeedForm(!showFeedForm)}
-                className={cn(
-                  "flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-black transition-all shadow-lg active:scale-95 group w-full md:w-auto",
-                  showFeedForm ? "bg-red-500 text-white" : "bg-[#ffd700] text-[#006a4e]"
-                )}
-              >
-                {showFeedForm ? "Close Form" : <><Plus className="w-5 h-5" /> Post to Club Feed</>}
-              </button>
-            )}
-
-            {activeTab === "media" && (
-              <button
-                onClick={() => setShowMediaForm(!showMediaForm)}
-                className={cn(
-                  "flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-black transition-all shadow-lg active:scale-95 group w-full md:w-auto",
-                  showMediaForm ? "bg-red-500 text-white" : "bg-[#ffd700] text-[#006a4e]"
-                )}
-              >
-                {showMediaForm ? "Close Form" : <><Plus className="w-5 h-5" /> Add Media Resource</>}
-              </button>
-            )}
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+             <h3 className="font-black text-gray-900 text-lg">Club Feed & Media</h3>
+             <div className="grid grid-cols-2 gap-4">
+               <button onClick={() => { setActiveTab("feeds"); setShowFeedForm(true); }} className="p-4 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs">Feed Achievement</button>
+               <button onClick={() => { setActiveTab("media"); setShowMediaForm(true); }} className="p-4 bg-purple-50 text-purple-700 rounded-xl font-bold text-xs">Add Media File</button>
+             </div>
           </div>
-        </header>
+        </div>
 
         {/* INSIGHTS TAB FORM */}
         {activeTab === "insights" && showForm && (

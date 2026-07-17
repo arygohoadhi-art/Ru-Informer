@@ -44,6 +44,7 @@ import { signOut } from "firebase/auth";
 import { motion, AnimatePresence } from "motion/react";
 import { CareerResource } from "../types";
 import { CLUBS_DATA, UniversityClub } from "../lib/clubs";
+import { ClubFeedForm } from "./ClubFeedForm";
 
 interface Props {
   profile: UserProfile;
@@ -55,11 +56,12 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [careerResources, setCareerResources] = useState<CareerResource[]>([]);
   const [clubFeedItems, setClubFeedItems] = useState<ClubFeedItem[]>([]);
+  const [mediaResources, setMediaResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"events" | "clubs" | "career">(
+  const [activeTab, setActiveTab] = useState<"events" | "clubs" | "career" | "media" | "registry">(
     "events",
   );
 
@@ -106,6 +108,13 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
   >({
     title: "",
     category: "Skill",
+    url: "",
+    description: "",
+  });
+
+  const [mediaFormData, setMediaFormData] = useState({
+    title: "",
+    type: "Website" as "PDF" | "Word" | "Video" | "Audio" | "Website",
     url: "",
     description: "",
   });
@@ -163,10 +172,25 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
       (error) => handleFirestoreError(error, OperationType.LIST, "clubFeeds"),
     );
 
+    const mediaQuery = query(
+      collection(db, "mediaResources"),
+      orderBy("createdAt", "desc"),
+    );
+    const unsubMedia = onSnapshot(
+      mediaQuery,
+      (snapshot) => {
+        setMediaResources(
+          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+        );
+      },
+      (error) => handleFirestoreError(error, OperationType.LIST, "mediaResources"),
+    );
+
     return () => {
       unsubEvents();
       unsubCareer();
       unsubFeeds();
+      unsubMedia();
     };
   }, [profile.uid]);
 
@@ -187,6 +211,30 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
       setShowForm(false);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, "careerResources");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handlePublishMedia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPublishing(true);
+    try {
+      await addDoc(collection(db, "mediaResources"), {
+        ...mediaFormData,
+        authorId: profile.uid,
+        authorName: profile.displayName || profile.email,
+        createdAt: serverTimestamp(),
+      });
+      setMediaFormData({
+        title: "",
+        type: "Website",
+        url: "",
+        description: "",
+      });
+      setShowForm(false);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, "mediaResources");
     } finally {
       setPublishing(false);
     }
@@ -428,6 +476,16 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
                 label: "Clubs Portal",
               },
               {
+                id: "media",
+                icon: <Rocket className="w-5 h-5" />,
+                label: "Media Feed",
+              },
+              {
+                id: "registry",
+                icon: <Megaphone className="w-5 h-5" />,
+                label: "Feed Registry",
+              },
+              {
                 id: "career",
                 icon: <Book className="w-5 h-5" />,
                 label: "Career DB",
@@ -486,14 +544,22 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
                 ? "Event Management"
                 : activeTab === "clubs"
                   ? "Club Feeds Portal"
-                  : "Career Database Mgr"}
+                  : activeTab === "media"
+                    ? "Media & Assets Feed"
+                    : activeTab === "registry"
+                      ? "Global Feed Registry"
+                      : "Career Database Mgr"}
             </h2>
             <p className="text-sm md:text-base text-gray-400 font-medium mt-1 italic">
               {activeTab === "events"
                 ? "Publish campus events and semantic matches."
                 : activeTab === "clubs"
                   ? "Feed news or events directly underneath each individual club."
-                  : "Manage global career resources for RU."}
+                  : activeTab === "media"
+                    ? "Feed PDF, Word, Video, Audio, or Website resources."
+                    : activeTab === "registry"
+                      ? "Manage all club achievements, history, and updates in one place."
+                      : "Manage global career resources for RU."}
             </p>
           </div>
 
@@ -512,7 +578,11 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
               ) : (
                 <>
                   <Plus className="w-5 h-5" />{" "}
-                  {activeTab === "events" ? "New Event" : "New Resource"}
+                  {activeTab === "events"
+                    ? "New Event"
+                    : activeTab === "media"
+                      ? "New Media"
+                      : "New Resource"}
                 </>
               )}
             </button>
@@ -749,6 +819,98 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
                     )}
                   </button>
                 </form>
+              ) : activeTab === "media" ? (
+                <form
+                  onSubmit={handlePublishMedia}
+                  className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 space-y-6"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Asset Title
+                      </label>
+                      <input
+                        required
+                        value={mediaFormData.title}
+                        onChange={(e) =>
+                          setMediaFormData({
+                            ...mediaFormData,
+                            title: e.target.value,
+                          })
+                        }
+                        className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#004d39] outline-none font-bold"
+                        placeholder="e.g. Club Introduction Video"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Asset Type
+                      </label>
+                      <select
+                        value={mediaFormData.type}
+                        onChange={(e) =>
+                          setMediaFormData({
+                            ...mediaFormData,
+                            type: e.target.value as any,
+                          })
+                        }
+                        className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none font-bold"
+                      >
+                        <option value="PDF">PDF Document</option>
+                        <option value="Word">Word Doc</option>
+                        <option value="Video">Video Link</option>
+                        <option value="Audio">Audio / Podcast</option>
+                        <option value="Website">Website / Article</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      Resource URL / Link
+                    </label>
+                    <input
+                      required
+                      value={mediaFormData.url}
+                      onChange={(e) =>
+                        setMediaFormData({
+                          ...mediaFormData,
+                          url: e.target.value,
+                        })
+                      }
+                      className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#004d39] outline-none font-medium"
+                      placeholder="Paste link here..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      Description
+                    </label>
+                    <textarea
+                      required
+                      value={mediaFormData.description}
+                      onChange={(e) =>
+                        setMediaFormData({
+                          ...mediaFormData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl h-24 md:h-32 outline-none font-medium text-sm leading-relaxed"
+                      placeholder="Briefly describe what this is..."
+                    />
+                  </div>
+                  <button
+                    disabled={publishing}
+                    className="w-full py-5 bg-[#004d39] text-white rounded-xl font-black text-lg flex items-center justify-center gap-4 transition-all"
+                  >
+                    {publishing ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5 text-[#ffd700]" /> Publish to Media Feed
+                      </>
+                    )}
+                  </button>
+                </form>
               ) : (
                 <form
                   onSubmit={handlePublishCareer}
@@ -940,298 +1102,128 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
                     selectedClubCategory === "All" ||
                     c.category === selectedClubCategory;
                   return matchesSearch && matchesCat;
-                }).map((club) => {
-                  const isFormActive = activeClubFeedFormId === club.id;
-                  const clubAnnouncements = clubFeedItems.filter(
-                    (f) => f.clubId === club.id,
-                  );
-
-                  return (
-                    <div
+                                }).map((club) => (
+                    <ClubCard
                       key={club.id}
-                      className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col space-y-4"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100/50 pb-4">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <a
-                              href={club.portalUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[#004d39] hover:underline font-black text-xl flex items-center gap-2"
-                            >
-                              {club.name} ({club.id})
-                              <ExternalLink className="w-4 h-4 text-gray-400" />
-                            </a>
-                            <span className="px-2 py-0.5 bg-blue-50 text-[9px] font-black text-[#004d39] uppercase tracking-widest rounded border border-blue-100">
-                              {club.category}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 font-medium mt-1 leading-relaxed">
-                            {club.description}
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            if (isFormActive) {
-                              setActiveClubFeedFormId(null);
-                            } else {
-                              setActiveClubFeedFormId(club.id);
-                              setClubFeedData({
-                                title: "",
-                                description: "",
-                                type: "News",
-                                venue: "",
-                                date: "",
-                                time: "",
-                                joinLink: "",
-                              });
-                            }
-                          }}
-                          className={cn(
-                            "px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 md:w-auto w-full",
-                            isFormActive
-                              ? "bg-red-50 text-red-600 border border-red-100"
-                              : "bg-[#004d39] text-white hover:bg-[#003c2c]",
-                          )}
-                        >
-                          {isFormActive
-                            ? "Close Feed Panel"
-                            : "Feed Event / News"}
-                        </button>
-                      </div>
-
-                      {/* Input Form Below Club Name */}
-                      {isFormActive && (
-                        <form
-                          onSubmit={async (e) => {
-                            e.preventDefault();
-                            await handlePublishClubFeed(club.id);
-                          }}
-                          className="bg-gray-50 border border-gray-100 rounded-2xl p-6 space-y-4 shadow-inner"
-                        >
-                          <div className="flex items-center gap-2 text-[#004d39]">
-                            <Sparkles className="w-4 h-4 text-[#ffd700] fill-[#ffd700]" />
-                            <span className="font-display font-black text-xs uppercase tracking-widest">
-                              Feed Broadcast to {club.id} Node
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="md:col-span-2 space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                Title
-                              </label>
-                              <input
-                                required
-                                type="text"
-                                placeholder="e.g. Weekly Workshop, Recruitment Notice 2026"
-                                value={clubFeedData.title}
-                                onChange={(e) =>
-                                  setClubFeedData({
-                                    ...clubFeedData,
-                                    title: e.target.value,
-                                  })
-                                }
-                                className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none text-xs font-semibold"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                Classification
-                              </label>
-                              <select
-                                value={clubFeedData.type}
-                                onChange={(e) =>
-                                  setClubFeedData({
-                                    ...clubFeedData,
-                                    type: e.target.value as any,
-                                  })
-                                }
-                                className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none"
-                              >
-                                <option value="News">News Update</option>
-                                <option value="Event">Upcoming Event</option>
-                                <option value="History">Club History</option>
-                                <option value="Achievement">Club Achievement</option>
-                                <option value="Ceremony">Ceremony / Gala</option>
-                                <option value="Update">Club Updates</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                              Content Description
-                            </label>
-                            <textarea
-                              required
-                              placeholder="Write news highlights, agenda points, or guidelines..."
-                              value={clubFeedData.description}
-                              onChange={(e) =>
-                                setClubFeedData({
-                                  ...clubFeedData,
-                                  description: e.target.value,
-                                })
-                              }
-                              className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none text-xs font-medium h-24"
-                            />
-                          </div>
-
-                          {clubFeedData.type === "Event" && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                  Venue
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="e.g. TSC Auditoriums, Online Zoom"
-                                  value={clubFeedData.venue}
-                                  onChange={(e) =>
-                                    setClubFeedData({
-                                      ...clubFeedData,
-                                      venue: e.target.value,
-                                    })
-                                  }
-                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold focus:border-[#004d39]"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                  Event Date
-                                </label>
-                                <input
-                                  type="date"
-                                  value={clubFeedData.date}
-                                  onChange={(e) =>
-                                    setClubFeedData({
-                                      ...clubFeedData,
-                                      date: e.target.value,
-                                    })
-                                  }
-                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold focus:border-[#004d39]"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                  Event Time
-                                </label>
-                                <input
-                                  type="time"
-                                  value={clubFeedData.time}
-                                  onChange={(e) =>
-                                    setClubFeedData({
-                                      ...clubFeedData,
-                                      time: e.target.value,
-                                    })
-                                  }
-                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold focus:border-[#004d39]"
-                                />
-                              </div>
-                              <div className="space-y-1 md:col-span-3">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                  Form URL / Join link (Optional)
-                                </label>
-                                <input
-                                  type="url"
-                                  placeholder="https://..."
-                                  value={clubFeedData.joinLink}
-                                  onChange={(e) =>
-                                    setClubFeedData({
-                                      ...clubFeedData,
-                                      joinLink: e.target.value,
-                                    })
-                                  }
-                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs"
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          <button
-                            disabled={publishingClubFeed === club.id}
-                            type="submit"
-                            className="w-full py-4 bg-[#004d39] hover:bg-[#003c2b] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-md"
-                          >
-                            {publishingClubFeed === club.id ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                              <>
-                                <Send className="w-4 h-4 text-[#ffd700]" />
-                                Publish to {club.id} Feed
-                              </>
-                            )}
-                          </button>
-                        </form>
+                      club={club}
+                      isFormActive={activeClubFeedFormId === club.id}
+                      clubAnnouncements={clubFeedItems.filter(
+                        (f) => f.clubId === club.id,
                       )}
-
-                      {/* Feed Registry Lists */}
-                      {clubAnnouncements.length > 0 ? (
-                        <div className="space-y-3 pt-2">
-                          <span className="text-[10px] font-black text-[#004d39] uppercase tracking-widest block">
-                            Active Feeds & Announcements (
-                            {clubAnnouncements.length})
-                          </span>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {clubAnnouncements.map((feed) => (
-                              <div
-                                key={feed.id}
-                                className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col justify-between"
-                              >
-                                <div>
-                                  <div className="flex items-center justify-between gap-2 mb-2">
-                                    <span
-                                      className={cn(
-                                        "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border",
-                                        (feed as any).clubPostType === "Event"
-                                          ? "bg-amber-50 text-amber-700 border-amber-100"
-                                          : "bg-blue-50 text-blue-700 border-blue-100",
-                                      )}
-                                    >
-                                      {(feed as any).clubPostType || "News"}
-                                    </span>
-                                    <button
-                                      onClick={async () => {
-                                        if (
-                                          confirm(
-                                            `Delete this announcement: "${feed.title}"?`,
-                                          )
-                                        ) {
-                                          await deleteDoc(
-                                            doc(db, "events", feed.id),
-                                          );
-                                        }
-                                      }}
-                                      className="text-red-400 hover:text-red-600 transition-colors"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                  <h5 className="font-black text-gray-900 text-sm leading-tight mb-1">
-                                    {feed.title.replace(`[${club.id}] `, "")}
-                                  </h5>
-                                  <p className="text-xs text-gray-500 font-medium whitespace-pre-wrap">
-                                    {feed.description}
-                                  </p>
-                                </div>
-                                <div className="mt-3 pt-2 border-t border-gray-100/50 flex flex-wrap gap-x-4 text-[9px] text-gray-400 font-bold">
-                                  <span>📍 {feed.venue}</span>
-                                  <span>🗓️ {feed.dateTime}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-gray-400 italic">
-                          No feeds or announcements active for this club.
-                        </p>
-                      )}
+                      setClubFeedData={setClubFeedData}
+                      clubFeedData={clubFeedData}
+                      setActiveClubFeedFormId={setActiveClubFeedFormId}
+                      handlePublishClubFeed={handlePublishClubFeed}
+                      publishingClubFeed={publishingClubFeed}
+                    />
+                  ))}
+              </div>
+              {clubFeedItems.length === 0 && (
+                <div className="col-span-full py-20 text-center text-gray-400 italic">
+                  No feeds or announcements active for this club.
+                </div>
+              )}
+            </div>
+          ) : activeTab === "media" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mediaResources.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col group relative"
+                >
+                  <button
+                    onClick={() => deleteDoc(doc(db, "mediaResources", item.id))}
+                    className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center",
+                      item.type === 'Video' ? "bg-red-50 text-red-600" :
+                      item.type === 'PDF' ? "bg-orange-50 text-orange-600" :
+                      item.type === 'Audio' ? "bg-purple-50 text-purple-600" :
+                      "bg-blue-50 text-blue-600"
+                    )}>
+                      {item.type === 'Video' ? <Rocket className="w-5 h-5" /> :
+                       item.type === 'PDF' ? <FileText className="w-5 h-5" /> :
+                       item.type === 'Website' ? <Globe className="w-5 h-5" /> :
+                       <Book className="w-5 h-5" />}
                     </div>
-                  );
-                })}
+                    <div>
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">
+                        {item.type}
+                      </span>
+                      <h4 className="font-black text-gray-900 leading-tight">
+                        {item.title}
+                      </h4>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 font-medium mb-6 line-clamp-3">
+                    {item.description}
+                  </p>
+                  <div className="mt-auto flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-gray-400">
+                      By {item.authorName}
+                    </span>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-black text-[#004d39] uppercase tracking-widest hover:underline flex items-center gap-1"
+                    >
+                      Access <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+              {mediaResources.length === 0 && (
+                <div className="col-span-full py-20 text-center text-gray-400 italic">
+                  Media Feed is currently empty.
+                </div>
+              )}
+            </div>
+          ) : activeTab === "registry" ? (
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <h3 className="font-black text-gray-900">Total Feed Items: {clubFeedItems.length}</h3>
+                <span className="text-xs font-bold text-gray-400">All clubs centralized management</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {clubFeedItems.map((feed) => (
+                  <div key={feed.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col group relative">
+                    <button
+                      onClick={() => deleteDoc(doc(db, "clubFeeds", feed.id!))}
+                      className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border",
+                        feed.type === 'achievement' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                        feed.type === 'history' ? "bg-blue-50 text-blue-700 border-blue-100" :
+                        feed.type === 'ceremony' ? "bg-amber-50 text-amber-700 border-amber-100" :
+                        "bg-gray-50 text-gray-700 border-gray-100"
+                      )}>
+                        {feed.type}
+                      </span>
+                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                        {feed.clubId}
+                      </span>
+                    </div>
+                    <h4 className="font-black text-gray-900 mb-2 leading-tight">
+                      {feed.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 mb-4 line-clamp-3 italic leading-relaxed">
+                      "{feed.content}"
+                    </p>
+                    <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between text-[9px] font-bold text-gray-400">
+                      <span>{feed.date || 'No Date'}</span>
+                      <span>By {feed.adminName}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -1280,6 +1272,177 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+function ClubCard({
+  club,
+  isFormActive,
+  clubAnnouncements,
+  setClubFeedData,
+  clubFeedData,
+  setActiveClubFeedFormId,
+  handlePublishClubFeed,
+  publishingClubFeed,
+}: {
+  club: any;
+  isFormActive: boolean;
+  clubAnnouncements: any[];
+  setClubFeedData: any;
+  clubFeedData: any;
+  setActiveClubFeedFormId: any;
+  handlePublishClubFeed: any;
+  publishingClubFeed: any;
+  key?: any;
+}) {
+  return (
+    <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100/50 pb-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={club.portalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#004d39] hover:underline font-black text-xl flex items-center gap-2"
+            >
+              {club.name} ({club.id})
+              <ExternalLink className="w-4 h-4 text-gray-400" />
+            </a>
+            <span className="px-2 py-0.5 bg-blue-50 text-[9px] font-black text-[#004d39] uppercase tracking-widest rounded border border-blue-100">
+              {club.category}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 font-medium mt-1 leading-relaxed">
+            {club.description}
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+        {/* Specific Feed Type Forms */}
+        <div className="space-y-4">
+          <h4 className="font-black text-gray-900 text-sm">
+            Add Club Achievement / History
+          </h4>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setClubFeedData({ ...clubFeedData, type: "Achievement" });
+                setActiveClubFeedFormId(club.id);
+              }}
+              className="flex-1 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold"
+            >
+              Post Achievement
+            </button>
+            <button
+              onClick={() => {
+                setClubFeedData({ ...clubFeedData, type: "History" });
+                setActiveClubFeedFormId(club.id);
+              }}
+              className="flex-1 p-3 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold"
+            >
+              Post History
+            </button>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <h4 className="font-black text-gray-900 text-sm">
+            Add Ceremony / Updates
+          </h4>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setClubFeedData({ ...clubFeedData, type: "Ceremony" });
+                setActiveClubFeedFormId(club.id);
+              }}
+              className="flex-1 p-3 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold"
+            >
+              Post Ceremony
+            </button>
+            <button
+              onClick={() => {
+                setClubFeedData({ ...clubFeedData, type: "Update" });
+                setActiveClubFeedFormId(club.id);
+              }}
+              className="flex-1 p-3 bg-purple-50 text-purple-700 rounded-xl text-xs font-bold"
+            >
+              Post Update
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Input Form Below Club Name */}
+      {isFormActive && (
+        <ClubFeedForm
+          club={club}
+          clubFeedData={clubFeedData}
+          setClubFeedData={setClubFeedData}
+          handlePublishClubFeed={handlePublishClubFeed}
+          publishingClubFeed={publishingClubFeed}
+        />
+      )}
+
+      {/* Feed Registry Lists */}
+      {clubAnnouncements.length > 0 ? (
+        <div className="space-y-3 pt-2">
+          <span className="text-[10px] font-black text-[#004d39] uppercase tracking-widest block">
+            Active Feeds & Announcements ({clubAnnouncements.length})
+          </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {clubAnnouncements.map((feed) => (
+              <div
+                key={feed.id}
+                className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border",
+                        (feed as any).clubPostType === "Event"
+                          ? "bg-amber-50 text-amber-700 border-amber-100"
+                          : "bg-blue-50 text-blue-700 border-blue-100",
+                      )}
+                    >
+                      {(feed as any).clubPostType || "News"}
+                    </span>
+                    <button
+                      onClick={async () => {
+                        if (
+                          confirm(
+                            `Delete this announcement: "${feed.title}"?`,
+                          )
+                        ) {
+                          await deleteDoc(doc(db, "clubFeeds", feed.id));
+                        }
+                      }}
+                      className="text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <h5 className="font-black text-gray-900 text-sm leading-tight mb-1">
+                    {feed.title.replace(`[${club.id}] `, "")}
+                  </h5>
+                  <p className="text-xs text-gray-500 font-medium whitespace-pre-wrap">
+                    {feed.description}
+                  </p>
+                </div>
+                <div className="mt-3 pt-2 border-t border-gray-100/50 flex flex-wrap gap-x-4 text-[9px] text-gray-400 font-bold">
+                  <span>📍 {feed.venue}</span>
+                  <span>🗓️ {feed.dateTime}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 italic">
+          No feeds or announcements active for this club.
+        </p>
+      )}
     </div>
   );
 }
