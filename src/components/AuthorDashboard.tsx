@@ -1282,7 +1282,7 @@ export default function AuthorDashboard({ profile, activeRoleView, onRoleChange 
                   >
                     <div className="flex justify-between items-start gap-4 mb-4">
                       <div>
-                        <span className="px-3 py-1 bg-emerald-50 text-[#006a4e] text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">
+                        <span className="px-3 py-1 bg-blue-50 text-[#006a4e] text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
                           {article.category}
                         </span>
                         <h4 className="text-xl font-black text-gray-900 mt-3 group-hover:text-[#006a4e] transition-colors">
@@ -1400,7 +1400,7 @@ export default function AuthorDashboard({ profile, activeRoleView, onRoleChange 
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-3">
                         <div className="flex gap-2">
-                          <span className="px-3 py-1 bg-emerald-50 text-[#006a4e] text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">
+                          <span className="px-3 py-1 bg-blue-50 text-[#006a4e] text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
                             {feed.clubId}
                           </span>
                           <span className="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
@@ -1472,7 +1472,7 @@ export default function AuthorDashboard({ profile, activeRoleView, onRoleChange 
                           res.type === "Word" && "bg-blue-50 text-blue-700 border-blue-100",
                           res.type === "Video" && "bg-amber-50 text-amber-700 border-amber-100",
                           res.type === "Audio" && "bg-purple-50 text-purple-700 border-purple-100",
-                          res.type === "Website" && "bg-emerald-50 text-emerald-700 border-emerald-100",
+                          res.type === "Website" && "bg-blue-50 text-blue-700 border-blue-100",
                           res.type === "Other" && "bg-gray-50 text-gray-700 border-gray-100"
                         )}>
                           {res.type === "PDF" && <File className="w-3 h-3" />}

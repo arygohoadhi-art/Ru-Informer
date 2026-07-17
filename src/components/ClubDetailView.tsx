@@ -199,16 +199,16 @@ export default function ClubDetailView({ clubId, onBack, events, profile }: Club
       {/* Back link element */}
       <button
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#006a4e] hover:text-[#004d39] transition-all bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-100 hover:scale-105"
+        className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#006a4e] hover:text-[#004d39] transition-all bg-blue-50 px-4 py-2.5 rounded-xl border border-blue-100 hover:scale-105"
       >
         <ArrowLeft className="w-4 h-4 stroke-[3px]" /> Back to Club Ecosystem
       </button>
 
       {/* Modern Banner Hero Card */}
-      <div className="bg-[#004d39] rounded-[2.8rem] p-8 md:p-14 text-white relative overflow-hidden shadow-xl border border-emerald-800/20">
+      <div className="bg-[#004d39] rounded-[2.8rem] p-8 md:p-14 text-white relative overflow-hidden shadow-xl border border-blue-800/20">
         {/* Neon blur decorations */}
         <div className="absolute top-0 right-0 w-[30%] h-[50%] bg-[#ffd700]/10 rounded-full blur-[80px]" />
-        <div className="absolute bottom-[-10%] left-[10%] w-[40%] h-[40%] bg-emerald-400/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px]" />
         
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           
@@ -353,7 +353,7 @@ export default function ClubDetailView({ clubId, onBack, events, profile }: Club
               </div>
 
               {/* Dynamic Guidance card based on Year */}
-              <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100 flex gap-5 items-start">
+              <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100 flex gap-5 items-start">
                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#006a4e] shrink-0 shadow-sm">
                   <Award className="w-6 h-6 text-[#006a4e]" />
                 </div>
@@ -433,7 +433,7 @@ export default function ClubDetailView({ clubId, onBack, events, profile }: Club
               <div className="space-y-1 text-center md:text-left">
                 <div className="flex justify-center md:justify-start items-center gap-1 text-[#ffd700] mb-1">
                   <Sparkles className="w-5 h-5 fill-[#ffd700]" />
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">DNA Match Calculations</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">DNA Match Calculations</span>
                 </div>
                 <h3 className="text-2xl font-display font-black text-gray-900">Your AI Affinity to {club.id}</h3>
                 <p className="text-sm text-gray-400 font-semibold italic">Based on academic, psychological, and target ambition alignment guidelines.</p>
@@ -465,7 +465,7 @@ export default function ClubDetailView({ clubId, onBack, events, profile }: Club
               {alignment.reasons.map((r, i) => (
                 <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex gap-4">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                    r.type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                    r.type === 'success' ? 'bg-blue-50 text-blue-600' : 'bg-blue-50 text-blue-600'
                   }`}>
                     {r.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <Info className="w-5 h-5" />}
                   </div>
@@ -488,7 +488,7 @@ export default function ClubDetailView({ clubId, onBack, events, profile }: Club
                   <h3 className="text-lg font-display font-black text-gray-900">Society Newsroom</h3>
                   <p className="text-xs text-gray-400 font-semibold italic">Viewing announcements, events, call for members, and contest rosters.</p>
                 </div>
-                <span className="px-3.5 py-1 bg-emerald-50 rounded-lg text-xs font-mono font-black text-[#006a4e]">
+                <span className="px-3.5 py-1 bg-blue-50 rounded-lg text-xs font-mono font-black text-[#006a4e]">
                   {feeds.length} Active Feeds
                 </span>
               </div>

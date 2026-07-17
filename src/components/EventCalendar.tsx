@@ -109,7 +109,7 @@ export default function EventCalendar({ events, onFeedbackClick }: Props) {
       case "Course":
         return { bg: "bg-blue-500", text: "text-blue-500", bgLight: "bg-blue-50" };
       default:
-        return { bg: "bg-[#006a4e]", text: "text-[#006a4e]", bgLight: "bg-emerald-50" };
+        return { bg: "bg-[#006a4e]", text: "text-[#006a4e]", bgLight: "bg-blue-50" };
     }
   };
 
@@ -159,7 +159,7 @@ export default function EventCalendar({ events, onFeedbackClick }: Props) {
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#006a4e]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <span className="px-3 py-1 bg-emerald-50 text-[#006a4e] text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">
+            <span className="px-3 py-1 bg-blue-50 text-[#006a4e] text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
               📅 Chrono Node
             </span>
             <h3 className="text-2xl md:text-3xl font-display font-black text-gray-900 tracking-tight mt-3">
@@ -189,7 +189,7 @@ export default function EventCalendar({ events, onFeedbackClick }: Props) {
               </button>
               <button
                 onClick={() => setCurrentDate(new Date())}
-                className="px-3 py-2 border border-gray-100 rounded-xl text-xs font-black uppercase tracking-wider text-[#006a4e] hover:bg-emerald-50 active:scale-95 transition-all"
+                className="px-3 py-2 border border-gray-100 rounded-xl text-xs font-black uppercase tracking-wider text-[#006a4e] hover:bg-blue-50 active:scale-95 transition-all"
               >
                 Today
               </button>
@@ -242,7 +242,7 @@ export default function EventCalendar({ events, onFeedbackClick }: Props) {
                     isSelected
                       ? "bg-[#006a4e] border-[#006a4e] text-white shadow-lg shadow-[#006a4e]/20"
                       : isToday
-                      ? "bg-emerald-50/50 border-[#ffd700] text-[#006a4e] font-black hover:bg-emerald-50"
+                      ? "bg-blue-50/50 border-[#ffd700] text-[#006a4e] font-black hover:bg-blue-50"
                       : "bg-white border-gray-100 text-gray-700 hover:border-[#006a4e]/20 hover:bg-gray-50"
                   )}
                 >
@@ -354,7 +354,7 @@ export default function EventCalendar({ events, onFeedbackClick }: Props) {
                                 ? "border-amber-100"
                                 : event.category === "Course"
                                 ? "border-blue-100"
-                                : "border-emerald-100"
+                                : "border-blue-100"
                             )}
                           >
                             {event.category}
@@ -390,7 +390,7 @@ export default function EventCalendar({ events, onFeedbackClick }: Props) {
                           )}
                           {event.fee && (
                             <span className="flex items-center gap-1.5 truncate">
-                              <DollarSign className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              <DollarSign className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                               {event.fee}
                             </span>
                           )}

@@ -551,7 +551,7 @@ ${clubFeedItems.map((f, i) => `${i+1}. [Club ID: ${f.clubId}] Title: "${f.title}
                 </div>
                 <div className="flex-1 min-w-0">
                    <p className="text-[11px] font-extrabold text-white truncate leading-none">{profile?.displayName || 'RU Student'}</p>
-                   <p className="text-[8px] font-bold text-emerald-400 uppercase tracking-wider mt-1">Grounded sync online</p>
+                   <p className="text-[8px] font-bold text-blue-400 uppercase tracking-wider mt-1">Grounded sync online</p>
                 </div>
              </div>
           </div>
@@ -630,7 +630,7 @@ ${clubFeedItems.map((f, i) => `${i+1}. [Club ID: ${f.clubId}] Title: "${f.title}
                {/* Suggestion Starter Cards */}
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full pt-2">
                   {[
-                    { q: 'Summarize latest TSC Club announcements & events', icon: <Users className="w-4 h-4 text-emerald-400" /> },
+                    { q: 'Summarize latest TSC Club announcements & events', icon: <Users className="w-4 h-4 text-blue-400" /> },
                     { q: 'Give me department success hacks for academic excellence', icon: <GraduationCap className="w-4 h-4 text-amber-400" /> }
                   ].map(item => (
                     <button
@@ -688,7 +688,7 @@ ${clubFeedItems.map((f, i) => `${i+1}. [Club ID: ${f.clubId}] Title: "${f.title}
                               className="p-1.5 hover:bg-gray-800/60 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold"
                               title="Copy response text"
                             >
-                              {copiedId === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedId === i ? <Check className="w-3.5 h-3.5 text-blue-400" /> : <Copy className="w-3.5 h-3.5" />}
                               {copiedId === i ? "Copied" : "Copy"}
                             </button>
 
@@ -725,7 +725,7 @@ ${clubFeedItems.map((f, i) => `${i+1}. [Club ID: ${f.clubId}] Title: "${f.title}
                           </div>
                         ) : p.inlineData.mimeType.startsWith('audio/') ? (
                           <div className="p-4 flex items-center gap-3">
-                            <Mic className="w-7 h-7 text-emerald-400 animate-pulse" />
+                            <Mic className="w-7 h-7 text-blue-400 animate-pulse" />
                             <div className="text-left">
                               <p className="text-xs font-black text-gray-100">Voice Query Captured</p>
                               <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Audio Processed</p>
@@ -781,7 +781,7 @@ ${clubFeedItems.map((f, i) => `${i+1}. [Club ID: ${f.clubId}] Title: "${f.title}
                         {staged.type === 'image' ? (
                           <img src={staged.preview} className="w-full h-full object-cover" />
                         ) : staged.type === 'audio' ? (
-                          <Mic className="w-5 h-5 text-emerald-400" />
+                          <Mic className="w-5 h-5 text-blue-400" />
                         ) : (
                           <FileText className="w-5 h-5 text-red-400" />
                         )}

@@ -57,7 +57,7 @@ function SynthesisMarkdown({ text }: { text: string }) {
         if (line.includes('**')) {
           const parts = line.split('**');
           renderedLine = parts.map((part, pIdx) => pIdx % 2 === 1 ? (
-            <strong key={pIdx} className="font-extrabold text-gray-950 bg-emerald-50 px-1 py-0.5 rounded text-[13px] md:text-[14px] border border-emerald-100/40">
+            <strong key={pIdx} className="font-extrabold text-gray-950 bg-blue-50 px-1 py-0.5 rounded text-[13px] md:text-[14px] border border-blue-100/40">
               {part}
             </strong>
           ) : part);
@@ -292,8 +292,8 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
             ) : playbook ? (
               <div className="space-y-6">
                 {/* Executive Summary */}
-                <div className="p-5 bg-gradient-to-br from-emerald-50/50 to-teal-50/20 rounded-2xl border border-emerald-50/50">
-                  <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest block mb-2">Executive AI Insight</span>
+                <div className="p-5 bg-gradient-to-br from-emerald-50/50 to-teal-50/20 rounded-2xl border border-blue-50/50">
+                  <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest block mb-2">Executive AI Insight</span>
                   <p className="text-xs md:text-sm text-gray-700 font-bold leading-relaxed italic">
                     "{playbook.executiveSummary}"
                   </p>
@@ -318,7 +318,7 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
                 {/* Tactical checklists */}
                 {playbook.tacticalToDos && playbook.tacticalToDos.length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-gray-50">
-                    <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest block">Playbook Milestones ({Object.values(checklist).filter(Boolean).length}/{playbook.tacticalToDos.length})</span>
+                    <span className="text-[9px] font-black text-blue-800 uppercase tracking-widest block">Playbook Milestones ({Object.values(checklist).filter(Boolean).length}/{playbook.tacticalToDos.length})</span>
                     <div className="space-y-2">
                       {playbook.tacticalToDos.map((todo: string, idx: number) => {
                         const isDone = !!checklist[todo];
@@ -328,7 +328,7 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
                             onClick={() => setChecklist(prev => ({ ...prev, [todo]: !isDone }))}
                             className={cn(
                               "flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer",
-                              isDone ? "bg-emerald-50/50 border-emerald-100 text-gray-400" : "bg-gray-50/50 border-gray-100 text-gray-700 hover:bg-gray-50"
+                              isDone ? "bg-blue-50/50 border-blue-100 text-gray-400" : "bg-gray-50/50 border-gray-100 text-gray-700 hover:bg-gray-50"
                             )}
                           >
                             <button className="shrink-0 mt-0.5">
@@ -396,7 +396,7 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
                         onClick={() => toggleResourceSelection(art.id || '')}
                         className={cn(
                           "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left",
-                          isSelected ? "bg-emerald-50/40 border-emerald-100/50" : "bg-white border-transparent hover:bg-gray-50"
+                          isSelected ? "bg-blue-50/40 border-blue-100/50" : "bg-white border-transparent hover:bg-gray-50"
                         )}
                       >
                         <button className="shrink-0">
@@ -409,7 +409,7 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-black text-gray-800 truncate">{art.title}</p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[8px] font-black text-emerald-700 uppercase bg-emerald-50 px-1.5 py-0.5 rounded">Article</span>
+                            <span className="text-[8px] font-black text-blue-700 uppercase bg-blue-50 px-1.5 py-0.5 rounded">Article</span>
                             <span className="text-[8px] font-bold text-gray-400 truncate">By {art.authorName}</span>
                           </div>
                         </div>
@@ -425,7 +425,7 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
                         onClick={() => toggleResourceSelection(media.id || '')}
                         className={cn(
                           "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left",
-                          isSelected ? "bg-emerald-50/40 border-emerald-100/50" : "bg-white border-transparent hover:bg-gray-50"
+                          isSelected ? "bg-blue-50/40 border-blue-100/50" : "bg-white border-transparent hover:bg-gray-50"
                         )}
                       >
                         <button className="shrink-0">
@@ -505,10 +505,10 @@ export default function AICampusSynthesizer({ profile, articles, mediaResources,
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="p-6 md:p-8 border border-emerald-50 rounded-3xl bg-emerald-50/10 space-y-6 text-left relative"
+                    className="p-6 md:p-8 border border-blue-50 rounded-3xl bg-blue-50/10 space-y-6 text-left relative"
                   >
                     <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                      <div className="flex items-center gap-2 text-[10px] font-black text-emerald-800 uppercase tracking-widest">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-blue-800 uppercase tracking-widest">
                         <CheckSquare className="w-4 h-4 text-[#006a4e]" />
                         Synthesized Result Ready
                       </div>

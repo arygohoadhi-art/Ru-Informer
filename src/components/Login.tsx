@@ -58,7 +58,7 @@ export default function Login() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-[#006a4e] rounded-full text-xs font-black uppercase tracking-widest border border-emerald-100"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-[#006a4e] rounded-full text-xs font-black uppercase tracking-widest border border-blue-100"
             >
               <Sparkles className="w-3 h-3" />
               Intelligence for Rajshahi University
@@ -143,7 +143,7 @@ export default function Login() {
                     <p className="text-sm font-medium text-gray-700 italic">"Generating a 4-year path for a CSE student who loves painting..."</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                    <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
                       <p className="text-[10px] font-black text-[#006a4e] uppercase mb-1">Rec Club</p>
                       <p className="text-xs font-bold text-gray-900">RU Fine Arts Society</p>
                     </div>

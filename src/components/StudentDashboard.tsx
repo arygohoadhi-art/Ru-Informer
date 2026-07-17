@@ -144,7 +144,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
   if (!profile.onboardingComplete) return <Onboarding profile={profile} onComplete={() => window.location.reload()} />;
 
   return (
-    <div className="min-h-screen bg-[#f8fbfa] flex flex-col md:flex-row shadow-inner selection:bg-[#ffd700] selection:text-[#004d39] pb-24 md:pb-0 relative">
+    <div className="min-h-screen bg-[#f8fbfa] flex flex-col md:flex-row shadow-inner selection:bg-[#ef4444] selection:text-[#1e3a8a] pb-24 md:pb-0 relative">
       {/* Dynamic Rajshahi University Page-Specific Background Overlay */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <AnimatePresence mode="wait">
@@ -173,12 +173,12 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-6 right-6 z-[200] max-w-sm w-full bg-[#004d39] text-white p-6 rounded-3xl shadow-2xl border border-white/10 flex flex-col gap-3 shadow-[#004d39]/10"
+            className="fixed top-6 right-6 z-[200] max-w-sm w-full bg-[#1e3a8a] text-white p-6 rounded-3xl shadow-2xl border border-white/10 flex flex-col gap-3 shadow-[#1e3a8a]/10"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#ffd700] animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#ffd700]">Live Match Alert!</span>
+                <Sparkles className="w-5 h-5 text-[#ef4444] animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#ef4444]">Live Match Alert!</span>
               </div>
               <button onClick={() => setActiveToast(null)} className="text-white/60 hover:text-white cursor-pointer">
                 <X className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   setActiveTab('calendar');
                   setActiveToast(null);
                 }}
-                className="px-3.5 py-1.5 bg-[#ffd700] text-[#004d39] rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 bg-[#ef4444] text-[#1e3a8a] rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
                 View Calendar
               </button>
@@ -217,10 +217,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b sticky top-0 z-[60]">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#006a4e] rounded-lg flex items-center justify-center shadow-sm">
-            <GraduationCap className="text-[#ffd700] w-5 h-5" />
+          <div className="w-8 h-8 bg-[#2563eb] rounded-lg flex items-center justify-center shadow-sm">
+            <GraduationCap className="text-[#ef4444] w-5 h-5" />
           </div>
-          <button onClick={() => setActiveTab('overview')} className="font-display font-black text-lg text-[#004d39] tracking-tighter">RU Informer</button>
+          <button onClick={() => setActiveTab('overview')} className="font-display font-black text-lg text-[#1e3a8a] tracking-tighter">RU Informer</button>
         </div>
         <div className="flex items-center gap-2">
           <button 
@@ -228,7 +228,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
             className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center relative border transition-all",
               activeTab === 'profile' 
-                ? "bg-[#006a4e] border-[#006a4e] text-white" 
+                ? "bg-[#2563eb] border-[#2563eb] text-white" 
                 : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100"
             )}
             title="Edit Profile"
@@ -253,7 +253,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
       {/* Mobile Bottom Navigation Bar */}
       {activeTab !== 'chat' && (
         <div className="md:hidden fixed bottom-6 left-4 right-4 z-[70]">
-          <div className="bg-[#004d39]/90 backdrop-blur-xl rounded-[2rem] p-2 flex items-center justify-between shadow-2xl border border-white/10">
+          <div className="bg-[#1e3a8a]/90 backdrop-blur-xl rounded-[2rem] p-2 flex items-center justify-between shadow-2xl border border-white/10">
             {[
               { id: 'overview', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Hub' },
               { id: 'sandbox', icon: <Zap className="w-5 h-5" />, label: 'Sandbox' },
@@ -266,7 +266,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                 onClick={() => setActiveTab(item.id as any)}
                 className={cn(
                   "flex-1 flex flex-col items-center gap-1 py-2.5 transition-all rounded-2xl",
-                  activeTab === item.id ? "bg-[#ffd700] text-[#004d39] shadow-lg shadow-[#ffd700]/20 scale-110" : "text-white/40"
+                  activeTab === item.id ? "bg-[#ef4444] text-[#1e3a8a] shadow-lg shadow-[#ef4444]/20 scale-110" : "text-white/40"
                 )}
               >
                 {item.icon}
@@ -279,15 +279,15 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
 
       {/* Sidebar Navigation */}
       <aside className={cn(
-        "fixed inset-0 z-50 bg-white md:bg-white md:static md:w-72 md:flex flex-col md:h-screen h-full transition-transform duration-300 md:translate-x-0 border-r border-[#006a4e]/5",
+        "fixed inset-0 z-50 bg-white md:bg-white md:static md:w-72 md:flex flex-col md:h-screen h-full transition-transform duration-300 md:translate-x-0 border-r border-[#2563eb]/5",
         isMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-8 h-full flex flex-col">
           <div className="hidden md:flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-[#006a4e] rounded-xl flex items-center justify-center shadow-lg transform -rotate-6">
-              <GraduationCap className="text-[#ffd700] w-6 h-6" />
+            <div className="w-10 h-10 bg-[#2563eb] rounded-xl flex items-center justify-center shadow-lg transform -rotate-6">
+              <GraduationCap className="text-[#ef4444] w-6 h-6" />
             </div>
-            <button onClick={() => setActiveTab('overview')} className="font-display font-black text-xl text-[#004d39] tracking-tighter">RU Informer</button>
+            <button onClick={() => setActiveTab('overview')} className="font-display font-black text-xl text-[#1e3a8a] tracking-tighter">RU Informer</button>
           </div>
 
           {activeRoleView && onRoleChange && (
@@ -301,8 +301,8 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
                     activeRoleView === "student"
-                      ? "bg-[#006a4e] text-white shadow-sm"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-[#006a4e]"
+                      ? "bg-[#2563eb] text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-[#2563eb]"
                   )}
                 >
                   🎓 View as Student
@@ -312,8 +312,8 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
                     activeRoleView === "admin"
-                      ? "bg-[#006a4e] text-white shadow-sm"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-[#006a4e]"
+                      ? "bg-[#2563eb] text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-[#2563eb]"
                   )}
                 >
                   🏛️ View as Club Admin
@@ -323,8 +323,8 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
                     activeRoleView === "author"
-                      ? "bg-[#006a4e] text-white shadow-sm"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-[#006a4e]"
+                      ? "bg-[#2563eb] text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-[#2563eb]"
                   )}
                 >
                   ✍️ View as Author
@@ -355,11 +355,11 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                 className={cn(
                   "w-full flex items-center gap-4 px-5 py-3.5 rounded-xl font-bold text-sm transition-all group",
                   activeTab === item.id 
-                    ? "bg-[#006a4e] text-white shadow-md shadow-[#006a4e]/20" 
-                    : "text-gray-400 hover:bg-gray-50 hover:text-[#006a4e]"
+                    ? "bg-[#2563eb] text-white shadow-md shadow-[#2563eb]/20" 
+                    : "text-gray-400 hover:bg-gray-50 hover:text-[#2563eb]"
                 )}
               >
-                <span className={cn(activeTab === item.id ? "text-[#ffd700]" : "")}>
+                <span className={cn(activeTab === item.id ? "text-[#ef4444]" : "")}>
                   {item.icon}
                 </span>
                 {item.label}
@@ -373,18 +373,18 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
               className={cn(
                 "w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all group/sidebar-profile",
                 activeTab === 'profile'
-                  ? "bg-emerald-50 border-emerald-200 text-[#006a4e]"
+                  ? "bg-blue-50 border-blue-200 text-[#2563eb]"
                   : "bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-500 hover:border-gray-200"
               )}
               title="Click to view/edit profile"
             >
-              <div className="w-9 h-9 bg-[#ffd700] rounded-lg flex items-center justify-center text-[#004d39] font-black shrink-0 group-hover/sidebar-profile:scale-105 transition-transform">
+              <div className="w-9 h-9 bg-[#ef4444] rounded-lg flex items-center justify-center text-[#1e3a8a] font-black shrink-0 group-hover/sidebar-profile:scale-105 transition-transform">
                 {profile.displayName?.charAt(0) || 'S'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-gray-900 truncate flex items-center gap-1 group-hover/sidebar-profile:text-[#006a4e] transition-colors">
+                <p className="text-xs font-black text-gray-900 truncate flex items-center gap-1 group-hover/sidebar-profile:text-[#2563eb] transition-colors">
                   {profile.displayName || 'Student'}
-                  <Edit3 className="w-3 h-3 opacity-0 group-hover/sidebar-profile:opacity-100 transition-opacity text-[#006a4e]" />
+                  <Edit3 className="w-3 h-3 opacity-0 group-hover/sidebar-profile:opacity-100 transition-opacity text-[#2563eb]" />
                 </p>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{profile.studentDNA?.dept || 'RU'}</p>
               </div>
@@ -404,7 +404,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
       <main className="flex-1 px-4 md:px-12 py-6 md:py-10 overflow-y-auto relative z-10">
         <header className="hidden md:flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 gap-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-display font-black text-[#004d39]">
+            <h2 className="text-2xl md:text-3xl font-display font-black text-[#1e3a8a]">
               {activeTab === 'overview' && "Campus Intelligence"}
               {activeTab === 'sandbox' && "Instant Recommend Sandbox"}
               {activeTab === 'calendar' && "Campus Event Chronology"}
@@ -421,7 +421,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
               </p>
               <button 
                 onClick={() => setActiveTab('profile')} 
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#006a4e] hover:text-[#004d39] hover:underline bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/50 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#2563eb] hover:text-[#1e3a8a] hover:underline bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100/50 transition-all cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5" /> Edit Profile
               </button>
@@ -431,9 +431,9 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
           <div className="flex items-center gap-4 self-end md:self-auto">
             <button 
               onClick={() => setActiveTab('chat')}
-              className="px-3 py-2 bg-[#006a4e] text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-sm hover:scale-105 transition-all flex items-center gap-2"
+              className="px-3 py-2 bg-[#2563eb] text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-sm hover:scale-105 transition-all flex items-center gap-2"
             >
-              <Sparkles className="w-3 h-3 text-[#ffd700]" />
+              <Sparkles className="w-3 h-3 text-[#ef4444]" />
               AI Chat
             </button>
             <div className="relative">
@@ -464,7 +464,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         <div className="p-12 text-center text-gray-400 text-sm font-medium italic">No matches detected.</div>
                       ) : (
                         notifications.map(n => (
-                          <div key={n.id} className={cn("p-6 hover:bg-gray-50 transition-colors border border-gray-50 rounded-2xl", !n.read && "bg-emerald-50/50 border-emerald-100")}>
+                          <div key={n.id} className={cn("p-6 hover:bg-gray-50 transition-colors border border-gray-50 rounded-2xl", !n.read && "bg-blue-50/50 border-blue-100")}>
                             <p className="text-sm text-gray-800 font-medium leading-relaxed">{n.message}</p>
                             <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-widest">{new Date(n.createdAt?.toDate()).toLocaleDateString()}</p>
                           </div>
@@ -483,18 +483,18 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                {/* Mentor AI Search Interface - THE NAVIGATOR */}
                <div className="lg:col-span-3">
-                 <div className="bg-gradient-to-br from-[#003c2b] to-[#001c13] rounded-[3rem] p-8 md:p-14 text-white relative overflow-hidden shadow-2xl border border-emerald-950/20">
+                 <div className="bg-gradient-to-br from-[#003c2b] to-[#001c13] rounded-[3rem] p-8 md:p-14 text-white relative overflow-hidden shadow-2xl border border-blue-950/20">
                    <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-                     <Bot className="w-96 h-96 text-[#ffd700]" />
+                     <Bot className="w-96 h-96 text-[#ef4444]" />
                    </div>
-                   <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                   <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
                    
                    <div className="relative z-10 max-w-4xl mx-auto space-y-10 text-center">
 
                      {/* Gemini/ChatGPT-style Input Dock */}
-                     <div className="relative bg-white/5 border border-white/10 rounded-3xl p-3 md:p-4 focus-within:border-[#ffd700] focus-within:ring-4 focus-within:ring-[#ffd700]/5 transition-all shadow-2xl backdrop-blur-md max-w-sm mx-auto">
+                     <div className="relative bg-white/5 border border-white/10 rounded-3xl p-3 md:p-4 focus-within:border-[#ef4444] focus-within:ring-4 focus-within:ring-[#ef4444]/5 transition-all shadow-2xl backdrop-blur-md max-w-sm mx-auto">
                        <div className="flex items-center gap-4">
-                         <div className="w-10 h-10 rounded-xl bg-[#004d39] text-[#ffd700] flex items-center justify-center shrink-0 shadow-md">
+                         <div className="w-10 h-10 rounded-xl bg-[#1e3a8a] text-[#ef4444] flex items-center justify-center shrink-0 shadow-md">
                            <Bot className="w-5 h-5" />
                          </div>
                          <input 
@@ -511,7 +511,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                          />
                          <button 
                            onClick={() => setActiveTab('chat')}
-                           className="px-6 py-3 bg-[#ffd700] text-[#004d39] rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-2 cursor-pointer"
+                           className="px-6 py-3 bg-[#ef4444] text-[#1e3a8a] rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-2 cursor-pointer"
                          >
                            <Sparkles className="w-3.5 h-3.5" />
                            Ask AI
@@ -527,7 +527,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                <div className="lg:col-span-3 space-y-6 md:space-y-10">
                   <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-100 pb-6 md:pb-8">
                     <div className="space-y-3 md:space-y-4">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ffd700] text-[#004d39] rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ef4444] text-[#1e3a8a] rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm">
                         <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -536,13 +536,13 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                       </div>
                       <div className="space-y-1">
                         <h2 className="text-3xl md:text-5xl font-display font-black text-gray-900 tracking-tighter">Event Stream</h2>
-                        <p className="text-sm md:text-lg font-medium text-gray-400 uppercase tracking-widest">Personalized activities for your <span className="text-[#004d39] font-bold italic">Career Node</span></p>
+                        <p className="text-sm md:text-lg font-medium text-gray-400 uppercase tracking-widest">Personalized activities for your <span className="text-[#1e3a8a] font-bold italic">Career Node</span></p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right hidden md:block">
                         <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Global Status</p>
-                        <p className="text-sm font-bold text-[#006a4e]">Synchronized in BD</p>
+                        <p className="text-sm font-bold text-[#2563eb]">Synchronized in BD</p>
                       </div>
                       <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 border border-gray-100">
                         <Sparkles className="w-6 h-6" />
@@ -606,13 +606,13 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                </div>
 
                {/* Alumni Node Spotlight - MOVED DOWN */}
-               <div className="lg:col-span-2 bg-[#004d39] rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-xl min-h-[300px] flex flex-col justify-center">
+               <div className="lg:col-span-2 bg-[#1e3a8a] rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-xl min-h-[300px] flex flex-col justify-center">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
                     <TrendingUp className="w-24 md:w-36 h-24 md:h-36" />
                   </div>
                   <div className="relative z-10 space-y-6">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">
-                      <Users className="w-3 h-3 text-[#ffd700]" />
+                      <Users className="w-3 h-3 text-[#ef4444]" />
                       Alumni Path
                     </div>
                     <h4 className="text-xl md:text-3xl font-display font-black leading-tight italic max-w-2xl">
@@ -625,12 +625,12 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between">
                   <div className="space-y-6">
                      <div className="flex items-center justify-between">
-                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e]">
+                        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#2563eb]">
                           <Cpu className="w-6 h-6" />
                         </div>
                         <div className="text-right">
                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">DNA Sync</p>
-                           <p className="text-sm font-bold text-[#006a4e]">High Resonance</p>
+                           <p className="text-sm font-bold text-[#2563eb]">High Resonance</p>
                         </div>
                      </div>
                      <h4 className="text-xl font-display font-black text-gray-900 tracking-tighter">Campus Synthesis</h4>
@@ -653,8 +653,8 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                     {[
                       { year: 'Year 1', desc: profile.roadmap.year1, color: 'bg-blue-500' },
-                      { year: 'Year 2', desc: profile.roadmap.year2, color: 'bg-emerald-500' },
-                      { year: 'Year 3', desc: profile.roadmap.year3, color: 'bg-[#ffd700]' },
+                      { year: 'Year 2', desc: profile.roadmap.year2, color: 'bg-blue-500' },
+                      { year: 'Year 3', desc: profile.roadmap.year3, color: 'bg-[#ef4444]' },
                       { year: 'Year 4', desc: profile.roadmap.year4, color: 'bg-red-500' },
                     ].map((step, i) => (
                       <div key={i} className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm relative group overflow-hidden">
@@ -667,14 +667,14 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                     ))}
                   </div>
 
-                   <div className="bg-[#004d39] rounded-3xl p-8 md:p-16 text-white relative overflow-hidden">
+                   <div className="bg-[#1e3a8a] rounded-3xl p-8 md:p-16 text-white relative overflow-hidden">
                       <div className="relative z-10 max-w-2xl">
                         <h4 className="text-xl md:text-3xl font-display font-black italic leading-tight mb-8">
                           "{profile.roadmap.alumnusPath}"
                         </h4>
                         <div className="flex flex-wrap gap-2 mb-10">
                           {profile.roadmap.keySkills.map(skill => (
-                            <span key={skill} className="px-4 py-2 bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-wider border border-white/10 text-[#ffd700]">
+                            <span key={skill} className="px-4 py-2 bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-wider border border-white/10 text-[#ef4444]">
                               {skill}
                             </span>
                           ))}
@@ -683,13 +683,13 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/10">
                           {profile.roadmap.conductionStrategy && (
                             <div className="space-y-2">
-                              <p className="text-[10px] font-black text-[#ffd700] uppercase tracking-[0.2em]">How to Conduct (via Clubs)</p>
+                              <p className="text-[10px] font-black text-[#ef4444] uppercase tracking-[0.2em]">How to Conduct (via Clubs)</p>
                               <p className="text-sm font-medium leading-relaxed text-white/80 italic">{profile.roadmap.conductionStrategy}</p>
                             </div>
                           )}
                           {profile.roadmap.onlineGuidelineReference && (
                             <div className="space-y-2">
-                              <p className="text-[10px] font-black text-[#ffd700] uppercase tracking-[0.2em]">Target Guidelines</p>
+                              <p className="text-[10px] font-black text-[#ef4444] uppercase tracking-[0.2em]">Target Guidelines</p>
                               <p className="text-sm font-medium leading-relaxed text-white/80 italic">{profile.roadmap.onlineGuidelineReference}</p>
                             </div>
                           )}
@@ -699,7 +699,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                 </div>
               ) : (
                 <div className="bg-white border border-gray-100 rounded-3xl p-8 md:p-12 shadow-sm text-center max-w-sm mx-auto space-y-6">
-                  <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e] mx-auto shadow-sm">
+                  <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-[#2563eb] mx-auto shadow-sm">
                     <Rocket className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
@@ -710,7 +710,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   </div>
                   <button
                     onClick={() => setActiveTab('profile')}
-                    className="px-6 py-3 bg-[#006a4e] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#004d39] transition-all cursor-pointer shadow-lg shadow-[#006a4e]/10 inline-flex items-center gap-2"
+                    className="px-6 py-3 bg-[#2563eb] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#1e3a8a] transition-all cursor-pointer shadow-lg shadow-[#2563eb]/10 inline-flex items-center gap-2"
                   >
                     <User className="w-4 h-4" /> Go to DNA Profile
                   </button>
@@ -736,11 +736,11 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                 {/* Recommended Top DNA Matches */}
                 {profile.roadmap?.recommendedClubs && profile.roadmap.recommendedClubs.length > 0 && (
                   <div className="space-y-6">
-                    <div className="bg-emerald-50 rounded-3xl p-8 md:p-12 text-[#006a4e] border border-emerald-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="bg-blue-50 rounded-3xl p-8 md:p-12 text-[#2563eb] border border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="w-5 h-5 text-[#ffd700]" />
-                          <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70">AI DNA Alignment</span>
+                          <Sparkles className="w-5 h-5 text-[#ef4444]" />
+                          <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70">AI DNA Alignment</span>
                         </div>
                         <h3 className="text-2xl md:text-3xl font-display font-black tracking-tight mb-2">Matches Linked to Your DNA</h3>
                         <p className="text-sm md:text-base font-medium opacity-80 leading-relaxed max-w-2xl">
@@ -759,14 +759,14 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                             className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 duration-300 group cursor-pointer border-t-4 border-t-emerald-600 hover:border-t-emerald-800"
                           >
                             <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e] group-hover:bg-[#006a4e] group-hover:text-[#ffd700] transition-colors duration-300">
+                              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#2563eb] group-hover:bg-[#2563eb] group-hover:text-[#ef4444] transition-colors duration-300">
                                 <Target className="w-6 h-6" />
                               </div>
-                              <span className="text-[9px] uppercase font-black tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                              <span className="text-[9px] uppercase font-black tracking-widest text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
                                 View Profile
                               </span>
                             </div>
-                            <h4 className="text-lg font-display font-black text-gray-900 mb-1 group-hover:text-[#006a4e] transition-colors">
+                            <h4 className="text-lg font-display font-black text-gray-900 mb-1 group-hover:text-[#2563eb] transition-colors">
                               {clubName}
                             </h4>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
@@ -777,7 +777,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                 e.stopPropagation();
                                 if (matchingClub) setSelectedClubId(matchingClub.id);
                               }}
-                              className="mt-4 flex items-center justify-center gap-2 w-full py-3.5 bg-emerald-50 hover:bg-[#006a4e] text-[#006a4e] hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300"
+                              className="mt-4 flex items-center justify-center gap-2 w-full py-3.5 bg-blue-50 hover:bg-[#2563eb] text-[#2563eb] hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300"
                             >
                               Analyze Detailed Fit <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
                             </button>
@@ -806,7 +806,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         placeholder="Search official RU Clubs..."
                         value={clubSearchQuery}
                         onChange={(e) => setClubSearchQuery(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#006a4e] outline-none text-sm font-semibold"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2563eb] outline-none text-sm font-semibold"
                       />
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -817,7 +817,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                           className={cn(
                             "px-4 py-2 text-xs font-bold rounded-xl transition-all border",
                             selectedClubCategory === cat
-                              ? "bg-[#006a4e] text-white border-[#006a4e]"
+                              ? "bg-[#2563eb] text-white border-[#2563eb]"
                               : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
                           )}
                         >
@@ -853,10 +853,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                           onClick={() => setSelectedClubId(club.id)}
                           className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group cursor-pointer"
                         >
-                          <div className="absolute top-0 left-0 w-2 h-full bg-[#006a4e] opacity-80" />
+                          <div className="absolute top-0 left-0 w-2 h-full bg-[#2563eb] opacity-80" />
                           <div>
                             <div className="flex items-center justify-between gap-4 mb-4">
-                              <span className="px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-lg text-xs font-mono font-black text-[#006a4e]">
+                              <span className="px-3 py-1 bg-blue-50 border border-blue-100 rounded-lg text-xs font-mono font-black text-[#2563eb]">
                                 {club.id}
                               </span>
                               <span className="text-[10px] font-black text-gray-400 tracking-widest uppercase">{club.category}</span>
@@ -865,10 +865,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                             <h4 className="mb-2">
                               <button
                                 onClick={() => setSelectedClubId(club.id)}
-                                className="inline-flex items-center gap-1.5 text-[#006a4e] hover:text-[#004d39] font-display font-black text-lg md:text-xl hover:underline group-hover:translate-x-1 transition-all duration-300 text-left"
+                                className="inline-flex items-center gap-1.5 text-[#2563eb] hover:text-[#1e3a8a] font-display font-black text-lg md:text-xl hover:underline group-hover:translate-x-1 transition-all duration-300 text-left"
                               >
                                 {club.name}
-                                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#006a4e] transition-colors" />
+                                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563eb] transition-colors" />
                               </button>
                             </h4>
 
@@ -882,7 +882,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                   e.stopPropagation();
                                   setSelectedClubId(club.id);
                                 }}
-                                className="flex-1 py-3 bg-emerald-50 hover:bg-[#006a4e] text-[#006a4e] hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm"
+                                className="flex-1 py-3 bg-blue-50 hover:bg-[#2563eb] text-[#2563eb] hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm"
                               >
                                 View Detailed Profile
                               </button>
@@ -895,7 +895,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                   e.stopPropagation();
                                   setExpandedClubId(isExpanded ? null : club.id);
                                 }}
-                                className="flex items-center justify-between w-full text-[10px] font-black uppercase tracking-widest text-[#006a4e] hover:text-[#004d39]"
+                                className="flex items-center justify-between w-full text-[10px] font-black uppercase tracking-widest text-[#2563eb] hover:text-[#1e3a8a]"
                               >
                                 <span className="flex items-center gap-2">
                                   <span className={cn("w-1.5 h-1.5 rounded-full", feeds.length > 0 ? "bg-amber-500 animate-pulse" : "bg-gray-300")} />
@@ -913,10 +913,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                           <span className={cn(
                                             "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border",
                                             (item as any).clubPostType === 'Event' ? "bg-amber-50 text-amber-700 border-amber-100" :
-                                            (item as any).clubPostType === 'Achievement' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                                            (item as any).clubPostType === 'Achievement' ? "bg-blue-50 text-blue-700 border-blue-100" :
                                             (item as any).clubPostType === 'History' ? "bg-indigo-50 text-indigo-700 border-indigo-100" :
                                             (item as any).clubPostType === 'Ceremony' ? "bg-purple-50 text-purple-700 border-purple-100" :
-                                            (item as any).clubPostType === 'Update' ? "bg-[#006a4e]/5 text-[#006a4e] border-[#006a4e]/15" :
+                                            (item as any).clubPostType === 'Update' ? "bg-[#2563eb]/5 text-[#2563eb] border-[#2563eb]/15" :
                                             "bg-blue-50 text-blue-700 border-blue-100"
                                           )}>
                                             {(item as any).clubPostType || 'News'}
@@ -940,7 +940,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                             href={item.contact.joinLink.startsWith('http') ? item.contact.joinLink : `https://${item.contact.joinLink}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mt-3 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#006a4e] hover:underline"
+                                            className="mt-3 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#2563eb] hover:underline"
                                           >
                                             Register / Join Now <ExternalLink className="w-2.5 h-2.5" />
                                           </a>
@@ -969,10 +969,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
             <div className="space-y-8 animate-fade-in">
               {/* Main Hub Header Card */}
               <div className="relative overflow-hidden bg-white rounded-3xl p-6 md:p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#006a4e]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#2563eb]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
                 <div className="relative min-w-0 flex-1">
                   <h3 className="text-2xl md:text-3xl font-display font-black text-gray-900 tracking-tight flex items-center gap-2">
-                    <Sparkles className="w-6 h-6 text-[#ffd700] fill-current" />
+                    <Sparkles className="w-6 h-6 text-[#ef4444] fill-current" />
                     RU Campus Insights Hub
                   </h3>
                   <p className="text-gray-400 font-medium italic text-xs md:text-sm mt-1">
@@ -986,7 +986,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                       className={cn(
                         "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
                         insightsSubTab === 'articles'
-                          ? "bg-[#006a4e] text-white shadow-sm"
+                          ? "bg-[#2563eb] text-white shadow-sm"
                           : "text-gray-400 hover:text-gray-900"
                       )}
                     >
@@ -997,7 +997,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                       className={cn(
                         "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
                         insightsSubTab === 'media'
-                          ? "bg-[#006a4e] text-white shadow-sm"
+                          ? "bg-[#2563eb] text-white shadow-sm"
                           : "text-gray-400 hover:text-gray-900"
                       )}
                     >
@@ -1008,11 +1008,11 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                       className={cn(
                         "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5",
                         insightsSubTab === 'synthesis'
-                          ? "bg-[#006a4e] text-white shadow-sm"
+                          ? "bg-[#2563eb] text-white shadow-sm"
                           : "text-gray-400 hover:text-gray-900"
                       )}
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-[#ffd700]" />
+                      <Sparkles className="w-3.5 h-3.5 text-[#ef4444]" />
                       AI Synthesis Center
                     </button>
                   </div>
@@ -1027,7 +1027,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         value={articleSearchQuery}
                         onChange={(e) => setArticleSearchQuery(e.target.value)}
                         placeholder="Search titles, authors, hacks..."
-                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold text-gray-900 focus:bg-white focus:border-[#006a4e] transition-all shadow-inner"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold text-gray-900 focus:bg-white focus:border-[#2563eb] transition-all shadow-inner"
                       />
                     ) : (
                       <input
@@ -1035,7 +1035,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         value={mediaSearchQuery}
                         onChange={(e) => setMediaSearchQuery(e.target.value)}
                         placeholder="Search files, channels, resource links..."
-                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold text-gray-900 focus:bg-white focus:border-[#006a4e] transition-all shadow-inner"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold text-gray-900 focus:bg-white focus:border-[#2563eb] transition-all shadow-inner"
                       />
                     )}
                   </div>
@@ -1053,8 +1053,8 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         className={cn(
                           "px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border transition-all cursor-pointer",
                           selectedArticleCategory === cat
-                            ? "bg-[#006a4e] text-white border-[#006a4e] shadow-md shadow-[#006a4e]/10"
-                            : "bg-white text-gray-400 border-gray-100 hover:border-[#006a4e]/20 hover:text-gray-900"
+                            ? "bg-[#2563eb] text-white border-[#2563eb] shadow-md shadow-[#2563eb]/10"
+                            : "bg-white text-gray-400 border-gray-100 hover:border-[#2563eb]/20 hover:text-gray-900"
                         )}
                       >
                         {cat}
@@ -1088,11 +1088,11 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                           layout
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 hover:border-[#006a4e]/10 transition-all shadow-sm relative group flex flex-col justify-between"
+                          className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 hover:border-[#2563eb]/10 transition-all shadow-sm relative group flex flex-col justify-between"
                         >
                           <div>
                             <div className="flex items-center justify-between gap-4">
-                              <span className="px-3 py-1 bg-emerald-50 text-[#006a4e] text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-100">
+                              <span className="px-3 py-1 bg-blue-50 text-[#2563eb] text-[9px] font-black uppercase tracking-wider rounded-full border border-blue-100">
                                 {art.category}
                               </span>
                               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -1100,7 +1100,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                               </span>
                             </div>
 
-                            <h4 className="text-lg md:text-xl font-display font-black text-gray-900 mt-4 leading-snug group-hover:text-[#006a4e] transition-colors">
+                            <h4 className="text-lg md:text-xl font-display font-black text-gray-900 mt-4 leading-snug group-hover:text-[#2563eb] transition-colors">
                               {art.title}
                             </h4>
 
@@ -1110,7 +1110,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                           </div>
 
                           <div className="flex items-center gap-3 mt-6 border-t pt-4">
-                            <div className="w-8 h-8 bg-emerald-50 text-[#006a4e] rounded-lg flex items-center justify-center font-black text-xs border border-emerald-100">
+                            <div className="w-8 h-8 bg-blue-50 text-[#2563eb] rounded-lg flex items-center justify-center font-black text-xs border border-blue-100">
                               {art.authorName.charAt(0)}
                             </div>
                             <div>
@@ -1136,8 +1136,8 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                         className={cn(
                           "px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border transition-all cursor-pointer",
                           selectedMediaType === type
-                            ? "bg-[#006a4e] text-white border-[#006a4e] shadow-md shadow-[#006a4e]/10"
-                            : "bg-white text-gray-400 border-gray-100 hover:border-[#006a4e]/20 hover:text-gray-900"
+                            ? "bg-[#2563eb] text-white border-[#2563eb] shadow-md shadow-[#2563eb]/10"
+                            : "bg-white text-gray-400 border-gray-100 hover:border-[#2563eb]/20 hover:text-gray-900"
                         )}
                       >
                         {type === 'All' ? 'All Formats' : type.toUpperCase()}
@@ -1173,7 +1173,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                             case 'word': return <FileUp className="w-5 h-5 text-blue-500" />;
                             case 'video': return <Video className="w-5 h-5 text-purple-500" />;
                             case 'audio': return <Music className="w-5 h-5 text-amber-500" />;
-                            case 'website': return <Globe className="w-5 h-5 text-emerald-500" />;
+                            case 'website': return <Globe className="w-5 h-5 text-blue-500" />;
                             default: return <File className="w-5 h-5 text-gray-500" />;
                           }
                         };
@@ -1184,7 +1184,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                             layout
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-[#006a4e]/10 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                            className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-[#2563eb]/10 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
                           >
                             <div>
                               <div className="flex items-center justify-between gap-2 mb-4">
@@ -1194,7 +1194,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                   res.type === 'word' ? "bg-blue-50 text-blue-700 border-blue-100" :
                                   res.type === 'video' ? "bg-purple-50 text-purple-700 border-purple-100" :
                                   res.type === 'audio' ? "bg-amber-50 text-amber-700 border-amber-100" :
-                                  "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                  "bg-blue-50 text-blue-700 border-blue-100"
                                 )}>
                                   {getIcon()}
                                   {res.type}
@@ -1227,7 +1227,7 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                                 href={res.url.startsWith('http') ? res.url : `https://${res.url}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#006a4e]/5 text-[#006a4e] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#006a4e] hover:text-white transition-all shrink-0 cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563eb]/5 text-[#2563eb] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2563eb] hover:text-white transition-all shrink-0 cursor-pointer"
                               >
                                 Access <ExternalLink className="w-3 h-3" />
                               </a>
@@ -1345,12 +1345,12 @@ function PlatformManual() {
 
   return (
     <div className="space-y-12 max-w-5xl">
-      <div className="bg-[#004d39] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden">
+      <div className="bg-[#1e3a8a] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 p-12 opacity-10">
           <Book className="w-48 h-48" />
         </div>
         <div className="relative z-10 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ffd700] text-[#004d39] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ef4444] text-[#1e3a8a] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
             Operational Guide
           </div>
           <h3 className="text-4xl md:text-6xl font-display font-black leading-tight tracking-tighter">System Protocol</h3>
@@ -1363,15 +1363,15 @@ function PlatformManual() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {protocols.map((p, i) => (
           <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all">
-            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-[#006a4e] mb-8">
+            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-[#2563eb] mb-8">
               {p.icon}
             </div>
             <h4 className="text-2xl font-display font-black text-gray-900 mb-4">{p.title}</h4>
             <p className="text-sm text-gray-500 font-medium leading-relaxed mb-8">{p.desc}</p>
             <div className="space-y-3">
               {p.steps.map((step, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-[10px] font-black text-[#006a4e] uppercase tracking-widest">
-                  <span className="w-1 h-1 bg-[#ffd700] rounded-full" />
+                <div key={idx} className="flex items-center gap-3 text-[10px] font-black text-[#2563eb] uppercase tracking-widest">
+                  <span className="w-1 h-1 bg-[#ef4444] rounded-full" />
                   {step}
                 </div>
               ))}
@@ -1387,7 +1387,7 @@ function PlatformManual() {
             const chatSection = document.getElementById('mentor-chat-section');
             chatSection?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="px-10 py-5 bg-[#004d39] text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-[#004d39]/20"
+          className="px-10 py-5 bg-[#1e3a8a] text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-[#1e3a8a]/20"
         >
           Speak with Navigator AI
         </button>
@@ -1629,14 +1629,14 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
     return (
       <div className="max-w-4xl mx-auto py-16 px-6 text-center bg-white rounded-[3rem] border border-gray-100 shadow-sm flex flex-col items-center justify-center min-h-[500px]">
         <div className="relative mb-10">
-          <div className="w-24 h-24 rounded-full border-4 border-emerald-50 border-t-emerald-600 animate-spin flex items-center justify-center" />
-          <div className="absolute inset-0 flex items-center justify-center text-emerald-600">
+          <div className="w-24 h-24 rounded-full border-4 border-blue-50 border-t-emerald-600 animate-spin flex items-center justify-center" />
+          <div className="absolute inset-0 flex items-center justify-center text-blue-600">
             <Sparkles className="w-8 h-8 animate-pulse" />
           </div>
         </div>
         <div className="space-y-4 max-w-lg">
           <h4 className="text-3xl font-display font-black text-gray-900 tracking-tight">Synthetically Calibrating...</h4>
-          <p className="text-sm font-bold text-[#006a4e] uppercase tracking-widest animate-pulse">
+          <p className="text-sm font-bold text-[#2563eb] uppercase tracking-widest animate-pulse">
             {generationStep === 1 && "Aligning Academic DNA parameters..."}
             {generationStep === 2 && "Mapping Rajshahi University Club coordinates..."}
             {generationStep === 3 && "Synthesizing deep localized 4-year success milestones..."}
@@ -1651,12 +1651,12 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
   return (
     <div className="max-w-7xl mx-auto space-y-10">
       {/* Top Banner introducing Instant Feedback */}
-      <div className="bg-[#004d39] rounded-[3.5rem] p-8 md:p-14 text-white relative overflow-hidden shadow-sm">
+      <div className="bg-[#1e3a8a] rounded-[3.5rem] p-8 md:p-14 text-white relative overflow-hidden shadow-sm">
         <div className="absolute top-0 right-0 p-10 opacity-10">
           <Cpu className="w-56 h-56" />
         </div>
         <div className="relative z-10 max-w-4xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ffd700] text-[#004d39] rounded-full text-[9px] font-black uppercase tracking-[0.25em]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ef4444] text-[#1e3a8a] rounded-full text-[9px] font-black uppercase tracking-[0.25em]">
             Interactive Synthesis Studio
           </div>
           <h3 className="text-3xl md:text-5xl font-display font-black leading-tight tracking-tighter">Academic DNA Calibration</h3>
@@ -1677,7 +1677,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
           <form onSubmit={(e) => { e.preventDefault(); handleSaveOnly(); }} className="space-y-8">
             {/* Section: Personal Identity */}
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Personal Profile Node</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70 border-b border-gray-100 pb-1 block">Personal Profile Node</span>
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Full Name</label>
                 <input 
@@ -1685,7 +1685,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   required
                   value={displayName} 
                   onChange={e => setDisplayName(e.target.value)} 
-                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm shadow-inner" 
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm shadow-inner" 
                   placeholder="e.g. Adit Chowdhury"
                 />
               </div>
@@ -1693,14 +1693,14 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Section A: Academics */}
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Academic Matrix</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70 border-b border-gray-100 pb-1 block">Academic Matrix</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Department Node</label>
                   <select 
                     value={dna.dept} 
                     onChange={e => setDna({...dna, dept: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Select Department</option>
                     {deptOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1711,7 +1711,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.year} 
                     onChange={e => setDna({...dna, year: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Select Year</option>
                     {yearOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1722,18 +1722,18 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Section B: Ambition & Context */}
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Ambition Core</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70 border-b border-gray-100 pb-1 block">Ambition Core</span>
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Primary Ambition</label>
                 <input 
                   value={dna.goals} 
                   onChange={e => setDna({...dna, goals: e.target.value})} 
-                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm shadow-inner" 
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm shadow-inner" 
                   placeholder="e.g. Software Engineer, Civil Servant, Banker"
                 />
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['BCS / Civil Service', 'Software Engineer', 'Bank Job', 'Higher Studies', 'Entrepreneur'].map(s => (
-                    <button key={s} type="button" onClick={() => setDna({...dna, goals: s})} className="text-[8px] font-black uppercase bg-[#ffd700]/10 hover:bg-[#ffd700]/30 px-2.5 py-1 rounded-full text-[#006a4e] transition-all">
+                    <button key={s} type="button" onClick={() => setDna({...dna, goals: s})} className="text-[8px] font-black uppercase bg-[#ef4444]/10 hover:bg-[#ef4444]/30 px-2.5 py-1 rounded-full text-[#2563eb] transition-all">
                       {s}
                     </button>
                   ))}
@@ -1746,7 +1746,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.goalStage} 
                     onChange={e => setDna({...dna, goalStage: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     {goalStageOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
@@ -1756,7 +1756,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.marketPreference} 
                     onChange={e => setDna({...dna, marketPreference: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Target Market</option>
                     {marketOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1767,14 +1767,14 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Section C: Character Traits */}
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Psychographic Vectors</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70 border-b border-gray-100 pb-1 block">Psychographic Vectors</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Primary Motivation</label>
                   <select 
                     value={dna.motivation} 
                     onChange={e => setDna({...dna, motivation: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">What drives you?</option>
                     {motivationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1785,7 +1785,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.workStyle} 
                     onChange={e => setDna({...dna, workStyle: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Best work environments</option>
                     {styleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1799,7 +1799,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.vision10Years} 
                     onChange={e => setDna({...dna, vision10Years: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Future self projection</option>
                     {visionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1810,7 +1810,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.majorObstacle} 
                     onChange={e => setDna({...dna, majorObstacle: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Biggest barrier</option>
                     {obstacleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1821,14 +1821,14 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Section D: Talents & Capabilities */}
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Functional Talents</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70 border-b border-gray-100 pb-1 block">Functional Talents</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Top Native Strength</label>
                   <select 
                     value={dna.topStrengths} 
                     onChange={e => setDna({...dna, topStrengths: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Your strongest asset</option>
                     {strengthOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1839,7 +1839,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.improvementAreas} 
                     onChange={e => setDna({...dna, improvementAreas: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Growth focus</option>
                     {improvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1850,14 +1850,14 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Section E: Extracurricular and Habits */}
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Extracurricular Nodes & Detailed Narrative</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#2563eb]/70 border-b border-gray-100 pb-1 block">Extracurricular Nodes & Detailed Narrative</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Previous Club Sector</label>
                   <select 
                     value={dna.previousInvolvement} 
                     onChange={e => setDna({...dna, previousInvolvement: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Select past involvement</option>
                     {involvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1868,7 +1868,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   <select 
                     value={dna.currentInvolvement} 
                     onChange={e => setDna({...dna, currentInvolvement: e.target.value})} 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Select current node involvement</option>
                     {involvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1882,7 +1882,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                   value={dna.habits} 
                   onChange={e => setDna({...dna, habits: e.target.value})} 
                   placeholder="Summarize daily routines, digital technologies used, or practical hands-on experiences."
-                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-medium text-gray-600 text-sm h-28 shadow-inner leading-relaxed" 
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#2563eb] outline-none transition-all font-medium text-gray-600 text-sm h-28 shadow-inner leading-relaxed" 
                 />
               </div>
             </div>
@@ -1893,7 +1893,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                 type="button"
                 onClick={handleSaveOnly}
                 disabled={saving}
-                className="flex-1 py-4 bg-gray-100 text-[#006a4e] rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#006a4e]/5 transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-4 bg-gray-100 text-[#2563eb] rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#2563eb]/5 transition-all flex items-center justify-center gap-2"
               >
                 {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Save Coordinates</>}
               </button>
@@ -1902,9 +1902,9 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                 type="button" 
                 onClick={handleDeepAISynthesis}
                 disabled={generatingRoadmap}
-                className="flex-1 py-4 bg-[#006a4e] text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-[#006a4e]/10 hover:scale-[1.01] hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-4 bg-[#2563eb] text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-[#2563eb]/10 hover:scale-[1.01] hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
-                <Sparkles className="w-5 h-5 text-[#ffd700]" /> Forging Deep AI Roadmap
+                <Sparkles className="w-5 h-5 text-[#ef4444]" /> Forging Deep AI Roadmap
               </button>
             </div>
           </form>
@@ -1930,7 +1930,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Instant Pathway Guideline Milestone */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[#ffd700]">
+              <div className="flex items-center gap-2 text-[#ef4444]">
                 <Target className="w-5 h-5" />
                 <h5 className="font-display font-black text-base uppercase tracking-tight">Temporal Stage Focus</h5>
               </div>
@@ -1946,7 +1946,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Club Scores Dynamic List */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-emerald-400">
+              <div className="flex items-center gap-2 text-blue-400">
                 <Users className="w-5 h-5" />
                 <h5 className="font-display font-black text-base uppercase tracking-tight">Best Society Resonance</h5>
               </div>
@@ -1958,13 +1958,13 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
                 {feedback.recommendedClubs.map((club, idx) => (
                   <div key={club.id} className="relative overflow-hidden bg-white/5 border border-white/5 p-4 rounded-2xl flex flex-col gap-2 group hover:border-[#10b981]/30 transition-all">
                     {/* Progress score bar alignment background overlay */}
-                    <div className="absolute top-0 left-0 bottom-0 bg-emerald-500/5 transition-all" style={{ width: `${club.score * 100}%` }} />
+                    <div className="absolute top-0 left-0 bottom-0 bg-blue-500/5 transition-all" style={{ width: `${club.score * 100}%` }} />
                     <div className="relative z-10 flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <span className="font-mono text-[8px] font-black bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{club.id}</span>
+                        <span className="font-mono text-[8px] font-black bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{club.id}</span>
                         <h6 className="font-bold text-sm text-white line-clamp-1 truncate block">{club.name}</h6>
                       </div>
-                      <span className="font-mono font-black text-xs text-emerald-400">{(club.score * 100).toFixed(0)}% Match</span>
+                      <span className="font-mono font-black text-xs text-blue-400">{(club.score * 100).toFixed(0)}% Match</span>
                     </div>
                     <p className="relative z-10 text-[10px] text-gray-400 italic line-clamp-1">"{club.description}"</p>
                   </div>
@@ -1974,7 +1974,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
 
             {/* Active Campus Event Alignment Heuristic */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-[#ffd700]">
+              <div className="flex items-center gap-2 text-[#ef4444]">
                 <Calendar className="w-5 h-5" />
                 <h5 className="font-display font-black text-base uppercase tracking-tight">Custom Events Match-ups</h5>
               </div>
@@ -1986,10 +1986,10 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
               ) : (
                 <div className="space-y-3">
                   {feedback.recommendedEvents.map((ev, i) => (
-                    <div key={ev.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex flex-col gap-2 hover:border-[#ffd700]/30 transition-all">
+                    <div key={ev.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex flex-col gap-2 hover:border-[#ef4444]/30 transition-all">
                       <div className="flex items-center justify-between">
                         <span className="text-[8px] font-black uppercase text-gray-500 tracking-wider">Matched Event Node</span>
-                        <span className="font-mono font-black text-[9px] text-[#ffd700]">{(ev.score * 100).toFixed(0)}% Score</span>
+                        <span className="font-mono font-black text-[9px] text-[#ef4444]">{(ev.score * 100).toFixed(0)}% Score</span>
                       </div>
                       <h6 className="font-bold text-xs text-white line-clamp-1">{ev.title}</h6>
                       <p className="text-[10px] text-gray-400 italic block">Organized by {ev.adminName || 'TSC Society'}</p>
@@ -2003,7 +2003,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
           {/* AI Settings Quick Link Section */}
           <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e]">
+              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#2563eb]">
                 <Cpu className="w-6 h-6 animate-pulse" />
               </div>
               <div>
@@ -2016,7 +2016,7 @@ function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEven
             </p>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('switchTab', { detail: 'settings' }))}
-              className="px-6 py-3 bg-gray-50 text-[#006a4e] leading-none rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#006a4e] hover:text-white transition-all border border-[#006a4e]/10 inline-block"
+              className="px-6 py-3 bg-gray-50 text-[#2563eb] leading-none rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#2563eb] hover:text-white transition-all border border-[#2563eb]/10 inline-block"
             >
               Configure API Node
             </button>
@@ -2047,7 +2047,7 @@ function CareerDatabase({ resources }: { resources: CareerResource[] }) {
               className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-[#006a4e] group-hover:bg-[#006a4e] group-hover:text-white transition-all">
+                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-[#2563eb] group-hover:bg-[#2563eb] group-hover:text-white transition-all">
                   {res.category === 'LinkedIn' && <Linkedin className="w-6 h-6" />}
                   {res.category === 'BCS' && <GraduationCap className="w-6 h-6" />}
                   {res.category === 'Tech' && <Cpu className="w-6 h-6" />}
@@ -2056,11 +2056,11 @@ function CareerDatabase({ resources }: { resources: CareerResource[] }) {
                 </div>
                 <div>
                   <h4 className="font-black text-gray-900 line-clamp-1">{res.title}</h4>
-                  <span className="text-[10px] font-black text-[#006a4e] uppercase tracking-widest">{res.category}</span>
+                  <span className="text-[10px] font-black text-[#2563eb] uppercase tracking-widest">{res.category}</span>
                 </div>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 italic mb-4">"{res.description}"</p>
-              <div className="flex items-center gap-2 text-xs font-black text-[#006a4e] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+              <div className="flex items-center gap-2 text-xs font-black text-[#2563eb] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
                 Visit Resource <ChevronRight className="w-4 h-4" />
               </div>
             </a>
@@ -2076,13 +2076,13 @@ function HubCard({ title, subtitle, icon, items, summary, onAction, actionText, 
     red: 'bg-red-50 text-[#D11226]',
     blue: 'bg-sky-50 text-[#00A3E0]',
     gold: 'bg-amber-50 text-amber-500',
-    green: 'bg-emerald-50 text-[#006a4e]'
+    green: 'bg-blue-50 text-[#2563eb]'
   };
 
   return (
-    <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm group hover:border-[#006a4e] transition-all flex flex-col">
+    <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm group hover:border-[#2563eb] transition-all flex flex-col">
       <div className="flex items-center gap-4 mb-4 md:mb-6">
-        <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all group-hover:bg-[#006a4e] group-hover:text-white shrink-0", colorStyles[color])}>
+        <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all group-hover:bg-[#2563eb] group-hover:text-white shrink-0", colorStyles[color])}>
           {icon}
         </div>
         <div>
@@ -2109,7 +2109,7 @@ function HubCard({ title, subtitle, icon, items, summary, onAction, actionText, 
         </p>
       )}
 
-      <button onClick={onAction} className="w-full py-3 md:py-4 text-[9px] md:text-[10px] font-black text-[#006a4e] uppercase tracking-widest bg-[#006a4e]/5 rounded-xl hover:bg-[#006a4e] hover:text-white transition-all">
+      <button onClick={onAction} className="w-full py-3 md:py-4 text-[9px] md:text-[10px] font-black text-[#2563eb] uppercase tracking-widest bg-[#2563eb]/5 rounded-xl hover:bg-[#2563eb] hover:text-white transition-all">
         {actionText}
       </button>
     </div>
@@ -2121,7 +2121,7 @@ function SectionHeader({ title, subtitle, icon, theme }: { title: string, subtit
     <div className="flex items-center gap-4">
       <div className={cn(
         "w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shadow-md",
-        theme === 'green' ? "bg-[#006a4e] text-white" : "bg-[#ffd700] text-[#006a4e]"
+        theme === 'green' ? "bg-[#2563eb] text-white" : "bg-[#ef4444] text-[#2563eb]"
       )}>
         {icon}
       </div>
@@ -2154,10 +2154,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
   return (
     <motion.div 
       whileHover={{ y: -8 }}
-      className="group bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm hover:border-[#006a4e] hover:shadow-2xl transition-all flex flex-col relative overflow-hidden"
+      className="group bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm hover:border-[#2563eb] hover:shadow-2xl transition-all flex flex-col relative overflow-hidden"
     >
       {/* Club Name Highlight Badge */}
-      <div className="absolute top-0 right-0 px-4 md:px-6 py-1.5 md:py-2 bg-[#006a4e] text-[#ffd700] text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-bl-2xl md:rounded-bl-3xl shadow-sm z-10">
+      <div className="absolute top-0 right-0 px-4 md:px-6 py-1.5 md:py-2 bg-[#2563eb] text-[#ef4444] text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-bl-2xl md:rounded-bl-3xl shadow-sm z-10">
         {event.organizer || event.adminName || 'RU Society'}
       </div>
 
@@ -2168,13 +2168,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
       )}
 
       <div className="flex items-center gap-4 md:gap-5 mb-6 md:mb-8">
-        <div className={cn("w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center shadow-md shrink-0", type === 'pro' ? "bg-emerald-50 text-[#006a4e]" : "bg-yellow-50 text-yellow-700")}>
+        <div className={cn("w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center shadow-md shrink-0", type === 'pro' ? "bg-blue-50 text-[#2563eb]" : "bg-yellow-50 text-yellow-700")}>
           {type === 'pro' ? <Briefcase className="w-5 h-5 md:w-6 md:h-6" /> : <Heart className="w-5 h-5 md:w-6 md:h-6" />}
         </div>
         <div className="min-w-0 flex-1">
-          <h4 className="text-lg md:text-xl font-display font-black text-gray-900 leading-tight group-hover:text-[#006a4e] transition-colors line-clamp-1">{event.title}</h4>
+          <h4 className="text-lg md:text-xl font-display font-black text-gray-900 leading-tight group-hover:text-[#2563eb] transition-colors line-clamp-1">{event.title}</h4>
           <div className="flex items-center gap-2 mt-1">
-            <span className="w-1.5 h-1.5 bg-[#ffd700] rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-[#ef4444] rounded-full animate-pulse" />
             <p className="text-[8px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">Live Node Activity</p>
           </div>
         </div>
@@ -2182,10 +2182,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
 
       {/* DATA & LOCATION HUD */}
       <div className="relative mb-6 md:mb-8">
-        <div className="absolute inset-0 bg-[#006a4e]/5 rounded-2xl md:rounded-3xl -rotate-1 skew-x-1 transition-transform group-hover:rotate-0 group-hover:skew-x-0" />
+        <div className="absolute inset-0 bg-[#2563eb]/5 rounded-2xl md:rounded-3xl -rotate-1 skew-x-1 transition-transform group-hover:rotate-0 group-hover:skew-x-0" />
         <div className="relative p-4 md:p-6 space-y-4 md:space-y-5">
           <div className="flex items-center gap-3 md:gap-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-[#006a4e] shadow-sm border border-gray-100 shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-[#2563eb] shadow-sm border border-gray-100 shrink-0">
               <Calendar className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div>
@@ -2194,7 +2194,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
             </div>
           </div>
           <div className="flex items-center gap-3 md:gap-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-[#ffd700] shadow-sm border border-gray-100 shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-[#ef4444] shadow-sm border border-gray-100 shrink-0">
               <MapPin className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div>
@@ -2215,7 +2215,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
           )}
           {event.fee && (
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-gray-100 shrink-0">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-gray-100 shrink-0">
                 <DollarSign className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div>
@@ -2254,8 +2254,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
       <div className="flex flex-col gap-3 md:gap-4">
         <div className="flex items-center justify-between gap-3 md:gap-4">
             <div className="flex gap-2">
-              {event.contact.whatsapp && <a href={`https://wa.me/${event.contact.whatsapp}`} target="_blank" rel="noreferrer" className="p-2.5 md:p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all shadow-sm"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /></a>}
-              {event.contact.joinLink && <a href={event.contact.joinLink} target="_blank" rel="noreferrer" className="p-2.5 md:p-3 bg-[#006a4e]/5 text-[#006a4e] rounded-xl hover:bg-[#006a4e] hover:text-white transition-all shadow-sm"><ExternalLink className="w-4 h-4 md:w-5 md:h-5" /></a>}
+              {event.contact.whatsapp && <a href={`https://wa.me/${event.contact.whatsapp}`} target="_blank" rel="noreferrer" className="p-2.5 md:p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /></a>}
+              {event.contact.joinLink && <a href={event.contact.joinLink} target="_blank" rel="noreferrer" className="p-2.5 md:p-3 bg-[#2563eb]/5 text-[#2563eb] rounded-xl hover:bg-[#2563eb] hover:text-white transition-all shadow-sm"><ExternalLink className="w-4 h-4 md:w-5 md:h-5" /></a>}
             </div>
             
             <button 
@@ -2272,7 +2272,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
               {interestCount} 
             </button>
         </div>
-        <button onClick={onFeedbackClick} className="w-full py-3.5 md:py-4 bg-gray-900 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-[#006a4e] shadow-lg flex items-center justify-center gap-2 md:gap-3">
+        <button onClick={onFeedbackClick} className="w-full py-3.5 md:py-4 bg-gray-900 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-[#2563eb] shadow-lg flex items-center justify-center gap-2 md:gap-3">
           Resonate <Rocket className="w-3.5 h-3.5 md:w-4 md:h-4" />
         </button>
       </div>
@@ -2305,12 +2305,12 @@ function SystemSettings() {
 
   return (
     <div className="space-y-12 max-w-4xl pb-32">
-      <div className="bg-[#004d39] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden">
+      <div className="bg-[#1e3a8a] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 p-12 opacity-10">
           <Cpu className="w-48 h-48" />
         </div>
         <div className="relative z-10 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ffd700] text-[#004d39] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#ef4444] text-[#1e3a8a] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
             Infrastructure Node
           </div>
           <h3 className="text-4xl md:text-6xl font-display font-black leading-tight tracking-tighter">System Settings</h3>
@@ -2340,7 +2340,7 @@ function SystemSettings() {
                 value={knowledge}
                 onChange={(e) => setKnowledge(e.target.value)}
                 placeholder="Paste exam schedules, club bylaws, specific formulas, or any data you want the AI to always remember..."
-                className="w-full h-64 p-6 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-[#006a4e] focus:bg-white outline-none transition-all font-medium text-gray-600 shadow-inner leading-relaxed"
+                className="w-full h-64 p-6 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-[#2563eb] focus:bg-white outline-none transition-all font-medium text-gray-600 shadow-inner leading-relaxed"
               />
               <p className="text-[10px] text-gray-400 font-medium italic mt-2">
                 This data is stored in your browser and injected into every AI session. You can "feed" it large amounts of text here.
@@ -2353,7 +2353,7 @@ function SystemSettings() {
                 isKnowledgeSaved ? "bg-blue-500 text-white" : "bg-gray-900 text-white hover:scale-[1.02] shadow-lg"
               )}
             >
-              {isKnowledgeSaved ? <Edit3 className="w-4 h-4" /> : <Zap className="w-4 h-4 text-[#ffd700]" />}
+              {isKnowledgeSaved ? <Edit3 className="w-4 h-4" /> : <Zap className="w-4 h-4 text-[#ef4444]" />}
               {isKnowledgeSaved ? "Knowledge Synchronized" : "Calibrate AI Brain"}
             </button>
           </form>
@@ -2362,7 +2362,7 @@ function SystemSettings() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-8">
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e]">
+              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-[#2563eb]">
                 <Sparkles className="w-8 h-8" />
               </div>
               <div>
@@ -2379,17 +2379,17 @@ function SystemSettings() {
                   value={key}
                   onChange={(e) => setKey(e.target.value)}
                   placeholder="Enter your API Key..."
-                  className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-[#006a4e] focus:bg-white outline-none transition-all font-mono text-sm shadow-inner"
+                  className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-[#2563eb] focus:bg-white outline-none transition-all font-mono text-sm shadow-inner"
                 />
               </div>
               <button 
                 type="submit" 
                 className={cn(
                   "w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-3",
-                  isSaved ? "bg-green-500 text-white" : "bg-[#006a4e] text-white hover:scale-[1.02] shadow-lg"
+                  isSaved ? "bg-red-500 text-white" : "bg-[#2563eb] text-white hover:scale-[1.02] shadow-lg"
                 )}
               >
-                {isSaved ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4 text-[#ffd700]" />}
+                {isSaved ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4 text-[#ef4444]" />}
                 {isSaved ? "Node Sync Complete" : "Update API Node"}
               </button>
             </form>
@@ -2411,8 +2411,8 @@ function SystemSettings() {
               </p>
               <div className="space-y-3">
                 {["Open in Mobile Browser", "Select 'Add to Home Screen'", "Launch App Mode"].map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 text-xs font-black text-[#006a4e] uppercase tracking-widest">
-                    <span className="w-1.5 h-1.5 bg-[#ffd700] rounded-full" />
+                  <div key={i} className="flex items-center gap-3 text-xs font-black text-[#2563eb] uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 bg-[#ef4444] rounded-full" />
                     {s}
                   </div>
                 ))}
@@ -2451,11 +2451,11 @@ function FeedbackModal({ event, userId, userName, onClose }: { event: ClubEvent,
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#004d39]/80 backdrop-blur-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1e3a8a]/80 backdrop-blur-sm">
       <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-lg rounded-[3.5rem] overflow-hidden shadow-2xl">
-        <div className="bg-[#004d39] p-10 text-white relative">
+        <div className="bg-[#1e3a8a] p-10 text-white relative">
           <button onClick={onClose} className="absolute top-8 right-8 p-2 hover:bg-white/10 rounded-full transition-all"><X className="w-5 h-5 text-white" /></button>
-          <Sparkles className="w-10 h-10 text-[#ffd700] mb-6" />
+          <Sparkles className="w-10 h-10 text-[#ef4444] mb-6" />
           <h3 className="text-3xl font-display font-black leading-tight">Synergy Feedback.</h3>
           <p className="text-white/60 text-sm font-medium italic truncate mb-0">{event.title}</p>
         </div>
@@ -2466,7 +2466,7 @@ function FeedbackModal({ event, userId, userName, onClose }: { event: ClubEvent,
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button key={star} type="button" onClick={() => setRating(star)} className="p-1 hover:scale-110 transition-transform">
-                  <Star className={cn("w-10 h-10", star <= rating ? "fill-[#ffd700] text-[#ffd700]" : "text-gray-100")} />
+                  <Star className={cn("w-10 h-10", star <= rating ? "fill-[#ef4444] text-[#ef4444]" : "text-gray-100")} />
                 </button>
               ))}
             </div>
@@ -2474,10 +2474,10 @@ function FeedbackModal({ event, userId, userName, onClose }: { event: ClubEvent,
 
           <div className="space-y-4">
             <label className="text-xs font-black text-gray-300 uppercase tracking-widest">Semantic Review</label>
-            <textarea required value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How did this event affect your roadmap?" className="w-full h-40 p-6 bg-gray-50 border-2 border-transparent rounded-[2.5rem] focus:border-[#006a4e] focus:bg-white outline-none transition-all text-sm font-medium leading-relaxed shadow-inner" />
+            <textarea required value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How did this event affect your roadmap?" className="w-full h-40 p-6 bg-gray-50 border-2 border-transparent rounded-[2.5rem] focus:border-[#2563eb] focus:bg-white outline-none transition-all text-sm font-medium leading-relaxed shadow-inner" />
           </div>
 
-          <button type="submit" disabled={submitting} className="w-full py-6 bg-[#006a4e] text-white rounded-[2.5rem] font-black text-lg shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all">
+          <button type="submit" disabled={submitting} className="w-full py-6 bg-[#2563eb] text-white rounded-[2.5rem] font-black text-lg shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all">
             {submitting ? <Loader2 className="w-8 h-8 animate-spin" /> : 'Inform RU Mentors'}
           </button>
         </form>

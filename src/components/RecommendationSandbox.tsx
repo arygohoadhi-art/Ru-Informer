@@ -297,15 +297,15 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
               </div>
               
               <div className="space-y-2 pt-2">
-                <div className="flex justify-between items-center text-[10px] font-mono text-emerald-300">
+                <div className="flex justify-between items-center text-[10px] font-mono text-blue-300">
                   <span>DISCIPLINE:</span>
                   <span className="font-bold text-white max-w-[150px] truncate">{dept}</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-mono text-emerald-300">
+                <div className="flex justify-between items-center text-[10px] font-mono text-blue-300">
                   <span>STAGE:</span>
                   <span className="font-bold text-white">{year}</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-mono text-emerald-300">
+                <div className="flex justify-between items-center text-[10px] font-mono text-blue-300">
                   <span>AMBITION TARGET:</span>
                   <span className="font-bold text-white">{goal}</span>
                 </div>
@@ -317,7 +317,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
               
               <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                 <motion.div 
-                  className="h-full bg-emerald-400"
+                  className="h-full bg-blue-400"
                   animate={{ width: ["20%", "100%", "20%"] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -373,7 +373,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
             {/* Pulsating Connector Stream */}
             <div className="shrink-0 flex flex-col items-center justify-center">
               <div className="hidden md:flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-emerald-400" />
+                <Zap className="w-4 h-4 text-blue-400" />
                 <div className="w-14 h-1 bg-white/20 rounded-full overflow-hidden relative">
                   <motion.div 
                     className="h-full w-4 bg-[#009e73] rounded-full absolute"
@@ -384,7 +384,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                 <span className="w-1.5 h-1.5 rounded-full bg-[#009e73] animate-ping" />
               </div>
               <div className="md:hidden flex flex-col items-center gap-1.5 my-1">
-                <Zap className="w-4 h-4 text-emerald-400" />
+                <Zap className="w-4 h-4 text-blue-400" />
                 <div className="h-8 w-1 bg-white/20 rounded-full overflow-hidden relative">
                   <motion.div 
                     className="w-full h-4 bg-[#009e73] rounded-full absolute"
@@ -398,7 +398,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
 
             {/* Output Node Card */}
             <div className="flex-1 w-full bg-white/10 backdrop-blur-sm p-5 rounded-2xl border border-white/10 space-y-3 relative">
-              <div className="absolute -top-3 left-4 px-2.5 py-0.5 bg-[#006a4e] text-emerald-200 border border-emerald-400/40 font-black text-[9px] uppercase tracking-widest rounded-md">
+              <div className="absolute -top-3 left-4 px-2.5 py-0.5 bg-[#006a4e] text-blue-200 border border-blue-400/40 font-black text-[9px] uppercase tracking-widest rounded-md">
                 STAGE 2: INSTANT COGNITIVE OUTPUT
               </div>
               
@@ -407,11 +407,11 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                   <span>AFFINITY MATCH:</span>
                   <span className="font-bold text-white text-[11px]">{results.finalScore}% Confidence</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-mono text-emerald-300">
+                <div className="flex justify-between items-center text-[10px] font-mono text-blue-300">
                   <span>TOP RECOMMENDED:</span>
                   <span className="font-bold text-white">{results.topClubs[0]?.id || 'RUCC'}</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-mono text-emerald-300">
+                <div className="flex justify-between items-center text-[10px] font-mono text-blue-300">
                   <span>TARGET SOCIAL PLACE:</span>
                   <span className="font-bold text-white truncate max-w-[130px]">{selectedSpot}</span>
                 </div>
@@ -423,7 +423,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
 
               <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                 <motion.div 
-                  className="h-full bg-emerald-400"
+                  className="h-full bg-blue-400"
                   animate={{ width: ["100%", "20%", "100%"] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -439,7 +439,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
           {/* Left Column (Parameter Synthesis Form) */}
           <div className="lg:col-span-7 bg-white rounded-[3rem] p-6 md:p-10 shadow-sm border border-gray-100 space-y-8">
             <div className="space-y-2 border-b border-gray-100 pb-5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#006a4e] rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-[#006a4e] rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
                 <Sparkles className="w-3.5 h-3.5" />
                 Intelligence Tuning Nodes
               </div>
@@ -607,7 +607,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                 disabled={saving}
                 className={`w-full sm:w-auto px-8 py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${
                   saveSuccess 
-                    ? 'bg-emerald-600 text-white' 
+                    ? 'bg-blue-600 text-white' 
                     : 'bg-[#006a4e] text-white hover:bg-[#004d39] shadow-lg shadow-[#006a4e]/20'
                 }`}
               >
@@ -649,7 +649,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-base">Recommendation Brain</h4>
-                    <p className="text-[9px] font-black uppercase text-emerald-400 tracking-wider">
+                    <p className="text-[9px] font-black uppercase text-blue-400 tracking-wider">
                       Active Cognitive Analysis (Cortex-Live)
                     </p>
                   </div>
@@ -683,7 +683,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                 {/* Instant Club Suggestions */}
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-center gap-2">
-                    <Users className="w-4.5 h-4.5 text-emerald-400" />
+                    <Users className="w-4.5 h-4.5 text-blue-400" />
                     <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
                       Matched TSC Societies
                     </span>
@@ -695,11 +695,11 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                       return (
                         <div 
                           key={club.id} 
-                          className="relative overflow-hidden bg-white/5 border border-white/5 p-4 rounded-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all cursor-default"
+                          className="relative overflow-hidden bg-white/5 border border-white/5 p-4 rounded-xl flex items-center justify-between group hover:border-blue-500/30 transition-all cursor-default"
                         >
                           <div className="space-y-0.5 max-w-[70%]">
                             <div className="flex items-center gap-2">
-                              <span className="text-[8px] font-black bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded uppercase">
+                              <span className="text-[8px] font-black bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded uppercase">
                                 {club.id}
                               </span>
                               <span className="text-xs font-black text-gray-300 block truncate">{club.name}</span>
@@ -709,7 +709,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className="font-mono text-xs font-black text-emerald-400 block">{matchPct}%</span>
+                            <span className="font-mono text-xs font-black text-blue-400 block">{matchPct}%</span>
                             <span className="text-[8px] uppercase font-black text-gray-500 block tracking-widest">Fit</span>
                           </div>
                         </div>
@@ -733,7 +733,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
 
                 {/* Dynamic Spots and Places */}
                 <div className="space-y-3 relative z-10 bg-white/5 p-4 rounded-xl border border-white/5">
-                  <div className="flex items-center gap-2 text-emerald-400">
+                  <div className="flex items-center gap-2 text-blue-400">
                     <Compass className="w-4.5 h-4.5" />
                     <span className="text-[10px] font-black uppercase tracking-widest block">
                       Target Spot Calibration ({selectedSpot})
@@ -749,7 +749,7 @@ export default function RecommendationSandbox({ profile }: RecommendationSandbox
 
             {/* Quick Informer AI Insight note */}
             <div className="bg-[#fcfdfc] p-6 rounded-3xl border border-gray-100 flex gap-4">
-              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-[#006a4e] shrink-0">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#006a4e] shrink-0">
                 <Info className="w-5 h-5" />
               </div>
               <div className="space-y-1.5 text-left">

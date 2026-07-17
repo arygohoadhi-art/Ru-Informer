@@ -45,7 +45,7 @@ export default function CareerResourcesDirectory() {
         { label: "BPSC Official Portal", url: "http://www.bpsc.gov.bd" },
         { label: "BCS Preliminary Syllabus", url: "http://bpsc.gov.bd/site/page/b80f7453-6a5c-43df-9730-81f185d0d829" }
       ],
-      icon: <BookOpen className="w-5 h-5 text-emerald-600" />
+      icon: <BookOpen className="w-5 h-5 text-blue-600" />
     },
     {
       id: "gov-bank-prep",
@@ -261,7 +261,7 @@ export default function CareerResourcesDirectory() {
                   <ul className="space-y-1.5">
                     {res.tips.map((tip, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-gray-600 font-medium leading-relaxed">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
                         <span>{tip}</span>
                       </li>
                     ))}

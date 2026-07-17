@@ -963,7 +963,7 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
                               {club.name} ({club.id})
                               <ExternalLink className="w-4 h-4 text-gray-400" />
                             </a>
-                            <span className="px-2 py-0.5 bg-emerald-50 text-[9px] font-black text-[#004d39] uppercase tracking-widest rounded border border-emerald-100">
+                            <span className="px-2 py-0.5 bg-blue-50 text-[9px] font-black text-[#004d39] uppercase tracking-widest rounded border border-blue-100">
                               {club.category}
                             </span>
                           </div>
@@ -1080,7 +1080,7 @@ export default function AdminDashboard({ profile, activeRoleView, onRoleChange }
                           </div>
 
                           {clubFeedData.type === "Event" && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                               <div className="space-y-1">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
                                   Venue
