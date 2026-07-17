@@ -97,7 +97,22 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login />;
+    const guestProfile: UserProfile = {
+      uid: 'guest',
+      email: 'guest@ru.informer.com',
+      displayName: 'Guest Student',
+      role: 'student',
+      onboardingComplete: true,
+      createdAt: serverTimestamp() as any,
+      updatedAt: serverTimestamp() as any,
+    };
+    return (
+      <StudentDashboard 
+        profile={guestProfile} 
+        activeRoleView="student"
+        onRoleChange={setActiveRoleView}
+      />
+    );
   }
 
   if (!profile) {
