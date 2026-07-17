@@ -297,7 +297,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
               </span>
               <div className="space-y-1.5">
                 <button
-                  onClick={() => onRoleChange("student")}
+                  onClick={() => {
+                    onRoleChange?.("student");
+                    setIsMenuOpen(false);
+                  }}
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
                     activeRoleView === "student"
@@ -308,7 +311,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   🎓 View as Student
                 </button>
                 <button
-                  onClick={() => onRoleChange("admin")}
+                  onClick={() => {
+                    onRoleChange?.("admin");
+                    setIsMenuOpen(false);
+                  }}
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
                     activeRoleView === "admin"
@@ -319,7 +325,10 @@ export default function StudentDashboard({ profile, activeRoleView, onRoleChange
                   🏛️ View as Club Admin
                 </button>
                 <button
-                  onClick={() => onRoleChange("author")}
+                  onClick={() => {
+                    onRoleChange?.("author");
+                    setIsMenuOpen(false);
+                  }}
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
                     activeRoleView === "author"

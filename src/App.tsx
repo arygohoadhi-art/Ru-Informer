@@ -106,10 +106,33 @@ export default function App() {
       createdAt: serverTimestamp() as any,
       updatedAt: serverTimestamp() as any,
     };
+    
+    const currentView = activeRoleView || 'student';
+    
+    if (currentView === 'student') {
+      return (
+        <StudentDashboard 
+          profile={guestProfile} 
+          activeRoleView={currentView}
+          onRoleChange={setActiveRoleView}
+        />
+      );
+    }
+    
+    if (currentView === 'author') {
+      return (
+        <AuthorDashboard 
+          profile={guestProfile} 
+          activeRoleView={currentView}
+          onRoleChange={setActiveRoleView}
+        />
+      );
+    }
+    
     return (
-      <StudentDashboard 
+      <AdminDashboard 
         profile={guestProfile} 
-        activeRoleView="student"
+        activeRoleView={currentView}
         onRoleChange={setActiveRoleView}
       />
     );
