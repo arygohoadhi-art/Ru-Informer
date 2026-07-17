@@ -97,21 +97,7 @@ export default function App() {
   }
 
   if (!user) {
-    const guestProfile: UserProfile = {
-      uid: 'guest',
-      email: 'guest@ru.informer.com',
-      displayName: 'Guest Student',
-      role: 'student',
-      onboardingComplete: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
-    return (
-      <StudentDashboard 
-        profile={guestProfile} 
-        activeRoleView="student"
-      />
-    );
+    return <Login />;
   }
 
   if (!profile) {

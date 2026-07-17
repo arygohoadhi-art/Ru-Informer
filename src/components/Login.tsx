@@ -116,6 +116,20 @@ export default function Login() {
                   <ChevronRight className="w-6 h-6" />
                 </div>
               </button>
+
+              <button 
+                onClick={handleLogin}
+                className="group relative flex-1 bg-white border-2 border-gray-100 text-[#004d39] p-6 rounded-3xl text-left overflow-hidden transition-all hover:border-purple-500/20"
+              >
+                <div className="relative z-10">
+                  <BookOpen className="w-8 h-8 text-gray-400 group-hover:text-purple-500 transition-colors mb-4" />
+                  <h3 className="text-xl font-bold mb-1">Author Entry</h3>
+                  <p className="text-gray-400 text-sm">Contribute content & guides</p>
+                </div>
+                <div className="absolute bottom-6 right-6 group-hover:translate-x-2 transition-transform">
+                  <ChevronRight className="w-6 h-6" />
+                </div>
+              </button>
             </motion.div>
           </div>
 
