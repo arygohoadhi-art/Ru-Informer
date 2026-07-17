@@ -31,7 +31,8 @@ export async function getEmbedding(text: string) {
 
 export async function getChatResponse(
   message: string | { text?: string; inlineData?: { data: string; mimeType: string } }[],
-  history: { role: 'user' | 'model', parts: { text?: string; inlineData?: { data: string; mimeType: string } }[] }[] = []
+  history: { role: 'user' | 'model', parts: { text?: string; inlineData?: { data: string; mimeType: string } }[] }[] = [],
+  groundingContext?: string
 ) {
   try {
     const ai = getAI();
@@ -82,6 +83,13 @@ export async function getChatResponse(
         2. You can generate images and provide spoken (audio) responses if explicitly asked.
         3. Provide expert advice on RU departments, clubs, and Bangladesh job market.
         
+        ${groundingContext ? `
+        CRITICAL REAL-TIME CAMPUS INTELLIGENCE GROUNDING (Use this to analyze, search, synthesize and answer based on latest feeded documents/information/resources):
+        --- START OF LIVE CAMPUS INTEL ---
+        ${groundingContext}
+        --- END OF LIVE CAMPUS INTEL ---
+        ` : ''}
+
         CRITICAL MANUAL KNOWLEDGE:
         The user has provided the following custom knowledge/data to "feed" your intelligence. Use this for queries related to their specific data:
         --- START OF USER DATA ---
@@ -257,5 +265,96 @@ export async function analyzeStudentMatch(studentDNA: string, eventDetails: stri
   } catch (error) {
     console.error("Match Analysis Error:", error);
     return "This event aligns with your indicated interests and goals.";
+  }
+}
+
+export async function generateCustomSynthesis(
+  selectedResources: { title: string; contentOrDesc: string; type: string }[],
+  demandType: 'summary' | 'notes' | 'exam' | 'career',
+  studentProfile: string
+) {
+  const prompt = `
+    You are RU Informer AI, the central intelligence for Rajshahi University students.
+    Perform an advanced AI synthesis on the following selected campus documents/resources.
+    
+    Student Profile:
+    ${studentProfile}
+    
+    Selected Documents/Resources to Synthesize:
+    ${selectedResources.map((r, i) => `${i + 1}. [${r.type}] Title: "${r.title}"\nContent/Description: "${r.contentOrDesc}"`).join('\n\n')}
+    
+    Information Demand Style: ${demandType.toUpperCase()}
+    Detailed Instructions for Style:
+    - SUMMARY: Create a high-impact, synthesized executive summary extracting key takeaways, central themes, and relevance to the student's department or goals.
+    - NOTES: Create highly structured, comprehensive, student-friendly revision/study notes. Use neat lists, bold terms, and outline formats.
+    - EXAM: Formulate 5 high-fidelity exam-prep multiple choice questions (with answer keys and explanations) and 2 critical-thinking essay-type questions based on the resources.
+    - CAREER: Map these resources directly to a 4-year career path, highlighting exactly how to utilize the insights for competitive jobs in Bangladesh (BCS, Bank Jobs, Tech, Pharma, etc.) and what skills to master.
+    
+    Format your response in a beautiful, structured format. Use clean markdown formatting (headers, bullets, bold text) to present your analysis. Make sure the tone is encouraging, professional, and precise.
+  `;
+  
+  try {
+    const ai = getAI();
+    const result = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+    });
+    return result.text;
+  } catch (error) {
+    console.error("Custom Synthesis Error:", error);
+    return "Failed to synthesize resources due to an API timeout. Please ensure your GEMINI_API_KEY is configured in Settings and try again.";
+  }
+}
+
+export async function generateStudentPlaybook(
+  studentProfile: string,
+  articles: any[],
+  mediaResources: any[],
+  clubFeeds: any[],
+  events: any[]
+) {
+  const prompt = `
+    You are RU Informer AI, the central intelligence for Rajshahi University.
+    You must synthesize ALL current campus intelligence, articles, and media files to generate a personalized "RU Campus Playbook & Action Guide" for this student.
+    
+    Student Profile:
+    ${studentProfile}
+    
+    Latest Campus Articles:
+    ${articles.slice(0, 10).map(a => `- [Article] "${a.title}" (${a.category}) - ${a.content.slice(0, 150)}...`).join('\n')}
+    
+    Multimedia Vault Files:
+    ${mediaResources.slice(0, 10).map(m => `- [${m.type}] "${m.title}" - Description: ${m.description}`).join('\n')}
+    
+    Active Club Feeds & TSC Updates:
+    ${clubFeeds.slice(0, 10).map(f => `- [${f.clubPostType || 'Update'}] "${f.title}" - ${f.content.slice(0, 150)}...`).join('\n')}
+    
+    Current Events:
+    ${events.slice(0, 10).map(e => `- [Event] "${e.title}" at ${e.venue} (${e.category})`).join('\n')}
+    
+    Structure the response strictly in JSON format so we can display it beautifully in the user interface:
+    {
+      "executiveSummary": "A concise, visionary summary (2-3 sentences) explaining how the current RU landscape matches their exact goals.",
+      "tscAlignment": "A synthesized recommendation of 2-3 specific actions or club milestones they should target based on the newest events/feeds, explained in detail.",
+      "multimediaStudyGuide": "A unified study list highlighting key takeaways synthesized from the Multimedia Vault that they should access immediately for their department/goals.",
+      "tacticalToDos": [
+        "To-do item 1 (related to latest events or articles)",
+        "To-do item 2 (related to vault resources or career skills)",
+        "To-do item 3 (specific to their major obstacles)"
+      ]
+    }
+  `;
+  
+  try {
+    const ai = getAI();
+    const result = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    });
+    return JSON.parse(result.text);
+  } catch (error) {
+    console.error("Playbook Generation Error:", error);
+    return null;
   }
 }

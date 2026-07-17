@@ -20,8 +20,14 @@ service cloud.firestore {
              getUserData().data.role == 'admin';
     }
 
+    function isAuthor() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserData().data.role == 'author';
+    }
+
     function isStaff() {
-      return isAdmin() || (isSignedIn() && request.auth.token.email == 'arygohoadhi@gmail.com');
+      return isAdmin() || isAuthor() || (isSignedIn() && request.auth.token.email == 'arygohoadhi@gmail.com');
     }
 
     function isValidFeedback(data) {
@@ -78,6 +84,27 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if isStaff();
+    }
+
+    // Club feeds collection
+    match /clubFeeds/{feedId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff();
+      allow update, delete: if isStaff();
+    }
+
+    // Articles collection
+    match /articles/{articleId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff() || isAuthor();
+      allow update, delete: if isStaff() || isAuthor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    // Media resources collection
+    match /mediaResources/{resourceId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff() || isAuthor();
+      allow update, delete: if isStaff() || isAuthor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
     }
   }
 }

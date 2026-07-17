@@ -7,7 +7,7 @@
       "properties": {
         "uid": { "type": "string" },
         "email": { "type": "string" },
-        "role": { "type": "string", "enum": ["student", "admin"] },
+        "role": { "type": "string", "enum": ["student", "admin", "author"] },
         "displayName": { "type": "string" },
         "onboardingComplete": { "type": "boolean" },
         "studentDNA": {
@@ -42,6 +42,10 @@
         "paymentDetails": { "type": "string" },
         "skillsTargeted": { "type": "string" },
         "dateTime": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "duration": { "type": "string" },
+        "fee": { "type": "string" },
         "contact": {
           "type": "object",
           "properties": {
@@ -98,6 +102,54 @@
         "icon": { "type": "string" }
       },
       "required": ["title", "category", "url"]
+    },
+    "ClubFeedItem": {
+      "title": "Club Feed Item",
+      "description": "News update or announcement published inside a club feed.",
+      "type": "object",
+      "properties": {
+        "clubId": { "type": "string" },
+        "type": { "type": "string", "enum": ["news", "event", "history", "achievement", "ceremony", "update"] },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "link": { "type": "string" },
+        "adminId": { "type": "string" },
+        "adminName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clubId", "type", "title", "content"]
+    },
+    "MediaResource": {
+      "title": "Media Resource",
+      "description": "An academic or club media resource uploaded by an author.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["PDF", "Word", "Video", "Audio", "Website", "Other"] },
+        "url": { "type": "string" },
+        "description": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "url", "authorId"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "A campus article or resource guide written by an author.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "readingTime": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "category", "authorId"]
     }
   },
   "firestore": {
@@ -120,6 +172,18 @@
     "/careerResources/{resourceId}": {
       "schema": "CareerResource",
       "description": "Career resources for RU students"
+    },
+    "/clubFeeds/{feedId}": {
+      "schema": "ClubFeedItem",
+      "description": "Events and news feeds of specific university clubs"
+    },
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Articles published by platform authors"
+    },
+    "/mediaResources/{resourceId}": {
+      "schema": "MediaResource",
+      "description": "Media resources published by platform authors"
     }
   }
 }

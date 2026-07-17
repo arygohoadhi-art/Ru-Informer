@@ -21,9 +21,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfdfc] selection:bg-[#ffd700] selection:text-[#004d39] overflow-hidden">
+    <div className="min-h-screen bg-[#fcfdfc] selection:bg-[#ffd700] selection:text-[#004d39] overflow-hidden relative">
       {/* Dynamic Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div 
+          style={{
+            backgroundImage: "url('https://upload.wikimedia.org/wikipedia/commons/e/e4/Paris_Road%2C_Rajshahi_University.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+          className="absolute inset-0 opacity-[0.06]" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#fcfdfc]/95 via-[#fcfdfc]/80 to-[#fcfdfc]/95" />
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#006a4e]/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#ffd700]/5 rounded-full blur-[120px]" />
       </div>

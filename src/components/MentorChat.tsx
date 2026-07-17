@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { getChatResponse, generateImage, generateSpeech } from '../services/geminiService';
 import { 
   Send, Bot, User, Loader2, Sparkles, MessageCircle, X, 
-  GraduationCap, Users, Zap, DollarSign, ChevronRight, 
+  GraduationCap, Users, Zap, ChevronRight, Copy, Check,
   Image as ImageIcon, Mic, Paperclip, Play, Pause, 
-  Trash2, Plus, Volume2, Maximize2, Minimize2, FileText
+  Trash2, Plus, Volume2, Maximize2, Minimize2, FileText,
+  Sparkle, Terminal, Compass, Search, ChevronDown, CheckCircle
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { Article, MediaResource, ClubEvent, ClubFeedItem, UserProfile } from '../types';
 
 interface MessagePart {
   text?: string;
@@ -26,7 +28,7 @@ interface Message {
 interface StagedFile {
   file: File;
   preview: string;
-  type: 'image' | 'audio';
+  type: 'image' | 'audio' | 'document';
 }
 
 interface ChatSession {
@@ -36,7 +38,124 @@ interface ChatSession {
   timestamp: number;
 }
 
-export default function MentorChat({ initialMessage, onClose }: { initialMessage?: string, onClose?: () => void }) {
+// Custom Gemini multicolor gradient animated Star SVG
+export function GeminiStar({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-pulse", className)}>
+      <path 
+        d="M12 2C12 2 12.5 8.5 15 11C17.5 13.5 24 14 24 14C24 14 17.5 14.5 15 17C12.5 19.5 12 26 12 26C12 26 11.5 19.5 9 17C6.5 14.5 0 14 0 14C0 14 6.5 13.5 9 11C11.5 8.5 12 2 12 2Z" 
+        fill="url(#geminiGradient)"
+      />
+      <defs>
+        <linearGradient id="geminiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4285F4" />
+          <stop offset="30%" stopColor="#9B72CB" />
+          <stop offset="70%" stopColor="#D96570" />
+          <stop offset="100%" stopColor="#F4B400" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// Premium responsive Markdown Renderer with style elements matching Google Gemini output
+function Markdown({ text }: { text: string }) {
+  if (!text) return null;
+  const lines = text.split('\n');
+  
+  return (
+    <div className="space-y-3 font-sans text-gray-200 leading-relaxed text-sm md:text-[15px]">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        
+        // Headers
+        if (trimmed.startsWith('### ')) {
+          return (
+            <h4 key={idx} className="text-sm md:text-base font-extrabold text-[#ffd700] mt-4 mb-2 tracking-tight flex items-center gap-1.5 pb-1 border-b border-gray-800/40">
+              <Sparkles className="w-3.5 h-3.5 text-[#ffd700] shrink-0" />
+              {trimmed.replace('### ', '')}
+            </h4>
+          );
+        }
+        if (trimmed.startsWith('## ')) {
+          return (
+            <h3 key={idx} className="text-base md:text-lg font-black text-gray-100 mt-5 mb-2 tracking-tight flex items-center gap-2">
+              <span className="w-1.5 h-4 bg-[#ffd700] rounded-full shrink-0" />
+              {trimmed.replace('## ', '')}
+            </h3>
+          );
+        }
+        if (trimmed.startsWith('# ')) {
+          return (
+            <h2 key={idx} className="text-lg md:text-xl font-black text-yellow-400 mt-6 mb-3 tracking-tighter">
+              {trimmed.replace('# ', '')}
+            </h2>
+          );
+        }
+        
+        // Bold/Key terms markers like **term**
+        let renderedLine: React.ReactNode = line;
+        if (line.includes('**')) {
+          const parts = line.split('**');
+          renderedLine = parts.map((part, pIdx) => pIdx % 2 === 1 ? (
+            <strong key={pIdx} className="font-extrabold text-[#ffd700] bg-yellow-500/10 border border-yellow-500/20 px-1.5 py-0.5 rounded text-xs md:text-sm">
+              {part}
+            </strong>
+          ) : part);
+        }
+
+        // Bullets
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="w-1.5 h-1.5 bg-[#ffd700] rounded-full mt-2.5 shrink-0" />
+              <span className="flex-1 text-xs md:text-sm text-gray-300 font-medium">{trimmed.slice(2)}</span>
+            </div>
+          );
+        }
+        
+        // Numbered lists
+        const numMatch = trimmed.match(/^(\d+)\.\s(.*)/);
+        if (numMatch) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="font-black text-[#ffd700] shrink-0 text-xs mt-1">{numMatch[1]}.</span>
+              <span className="flex-1 text-xs md:text-sm text-gray-300 font-medium">{numMatch[2]}</span>
+            </div>
+          );
+        }
+
+        // Divider
+        if (trimmed === '---') {
+          return <hr key={idx} className="border-gray-800/60 my-4" />;
+        }
+
+        // Standard Paragraph
+        if (trimmed === '') return <div key={idx} className="h-2" />;
+        
+        return <p key={idx} className="text-xs md:text-sm text-gray-300 font-normal leading-relaxed">{renderedLine}</p>;
+      })}
+    </div>
+  );
+}
+
+export default function MentorChat({ 
+  initialMessage, 
+  onClose,
+  articles = [],
+  mediaResources = [],
+  events = [],
+  clubFeedItems = [],
+  profile
+}: { 
+  initialMessage?: string;
+  onClose?: () => void;
+  articles?: Article[];
+  mediaResources?: MediaResource[];
+  events?: ClubEvent[];
+  clubFeedItems?: ClubFeedItem[];
+  profile: UserProfile;
+}) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -45,11 +164,51 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeModel, setActiveModel] = useState<'flash' | 'thinking'>('flash');
+  
+  // Track if chatbot is expanded to fullscreen Gemini layout
+  const [isExpanded, setIsExpanded] = useState(() => {
+    return localStorage.getItem('ru_chat_expanded') === 'true';
+  });
+
+  // Track copied message state
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Grounded context of campus resources
+  const groundingContext = `
+STUDENT PROFILE:
+- Name: ${profile?.displayName || 'RU Student'}
+- Department: ${profile?.studentDNA?.dept || 'Not Specified'}
+- Study Year: ${profile?.studentDNA?.year || 'Not Specified'}
+- Career Goals: ${profile?.studentDNA?.goals || 'Not Specified'}
+- Primary Motivation: ${profile?.studentDNA?.motivation || 'Not Specified'}
+- Core Obstacles: ${profile?.studentDNA?.majorObstacle || 'Not Specified'}
+- Key Strengths: ${profile?.studentDNA?.topStrengths || 'Not Specified'}
+- Work Style: ${profile?.studentDNA?.workStyle || 'Not Specified'}
+
+LIVE CAMPUS INSIGHT ARTICLES & GUIDES (Authorized Authors):
+${articles.map((a, i) => `${i+1}. [Category: ${a.category}] Title: "${a.title}"\nContent Summary: "${a.content.slice(0, 300)}..."`).join('\n')}
+
+LIVE MULTIMEDIA VAULT RESOURCES:
+${mediaResources.map((m, i) => `${i+1}. [Format: ${m.type}] Title: "${m.title}"\nDescription: "${m.description}"\nAccess Link: ${m.url}`).join('\n')}
+
+ACTIVE CLUB EVENTS:
+${events.map((e, i) => `${i+1}. [Category: ${e.category}] Title: "${e.title}" at ${e.venue}\nTarget Skills: ${e.skillsTargeted}\nDate: ${e.dateTime}`).join('\n')}
+
+LIVE CLUB POSTS & TSC FEEDS:
+${clubFeedItems.map((f, i) => `${i+1}. [Club ID: ${f.clubId}] Title: "${f.title}"\nContent: "${f.content.slice(0, 300)}..."`).join('\n')}
+`;
+
+  // Sync expanded status to localStorage
+  useEffect(() => {
+    localStorage.setItem('ru_chat_expanded', isExpanded ? 'true' : 'false');
+  }, [isExpanded]);
 
   // Load sessions on mount
   useEffect(() => {
@@ -237,14 +396,14 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
     setStagedFiles([]);
 
     try {
-      // Logic for special commands (e.g. "generate image")
+      // Image Generation flow
       if (textToSend.toLowerCase().includes('generate image') || textToSend.toLowerCase().includes('draw')) {
         const imageUrl = await generateImage(textToSend);
         if (imageUrl) {
           const modelMessage: Message = {
             role: 'model',
             parts: [
-              { text: "I've generated this visualization for you:" },
+              { text: "I've synthesized this visualization for your query:" },
               { inlineData: { data: imageUrl.split(',')[1], mimeType: 'image/png' } }
             ]
           };
@@ -254,9 +413,10 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
         }
       }
 
-      const responseText = await getChatResponse(userParts, messages);
+      // Standard Gemini generation call
+      const responseText = await getChatResponse(userParts, messages, groundingContext);
       
-      // Auto-TTS if audio was involved or explicitly asked
+      // Auto text-to-speech if asked or voice capture was attached
       let audioUrl = undefined;
       if (textToSend.toLowerCase().includes('talk') || textToSend.toLowerCase().includes('listen') || stagedFiles.some(f => f.type === 'audio')) {
         audioUrl = await generateSpeech(responseText || "");
@@ -271,7 +431,7 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
       console.error(error);
       setMessages(prev => [...prev, { 
         role: 'model', 
-        parts: [{ text: "Synchronizaton error in RU Node. Please try again." }] 
+        parts: [{ text: "Synchronization error. Please ensure your GEMINI_API_KEY is configured inside settings." }] 
       }]);
     } finally {
       setLoading(false);
@@ -285,264 +445,353 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] bg-[#fcfcfc] flex overflow-hidden font-sans">
-      <audio ref={audioRef} className="hidden" />
-      
-      {/* Sidebar - Chat History Feel */}
-      <motion.div 
-        animate={{ width: isSidebarOpen ? 280 : 0 }}
-        className="h-full bg-white border-r border-gray-100 hidden md:flex flex-col overflow-hidden"
-      >
-        <div className="p-6 flex items-center justify-between border-b border-gray-50 bg-[#004d39] text-white">
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-[#ffd700]" />
-             </div>
-             <span className="font-display font-black text-xs uppercase tracking-widest">Navigator v2</span>
-          </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="hover:bg-white/10 p-1 rounded">
-             <Minimize2 className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex-1 p-4 overflow-y-auto space-y-2">
-           <button 
-            onClick={() => startNewSession()}
-            className="w-full text-left p-4 rounded-2xl bg-gray-50 border border-[#006a4e]/10 text-xs font-bold text-[#006a4e] flex items-center gap-3 hover:bg-white transition-all shadow-sm"
-           >
-              <Plus className="w-4 h-4" /> New Session
-           </button>
-           <div className="pt-6 px-2">
-             <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Past Intelligence</p>
-             <div className="space-y-1">
-                {sessions.map(s => (
-                  <div 
-                    key={s.id} 
-                    onClick={() => loadSession(s)}
-                    className={cn(
-                      "group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all",
-                      activeSessionId === s.id ? "bg-emerald-50 text-[#006a4e]" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                    )}
-                  >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <MessageCircle className={cn("w-3.5 h-3.5 shrink-0", activeSessionId === s.id ? "text-[#006a4e]" : "text-gray-300")} />
-                      <span className="text-xs font-bold truncate">{s.title}</span>
-                    </div>
-                    <button 
-                      onClick={(e) => deleteSession(e, s.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-                {sessions.length === 0 && (
-                  <p className="text-[10px] font-medium text-gray-400 italic p-2">No archived nodes yet.</p>
-                )}
-             </div>
-           </div>
-        </div>
-        <div className="p-6 bg-gray-50 space-y-4">
-           <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#ffd700] flex items-center justify-center text-[#004d39] font-black text-[10px]">AD</div>
-              <div className="flex-1">
-                 <p className="text-[10px] font-black text-gray-900 truncate">Academic Node</p>
-                 <p className="text-[8px] font-bold text-gray-400 uppercase">Synchronized</p>
-              </div>
-           </div>
-        </div>
-      </motion.div>
+  const copyToClipboard = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(idx);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-      {/* Main Chat Interface */}
-      <div className="flex-1 flex flex-col relative bg-white">
-        {/* Header */}
-        <div className="h-16 md:h-20 px-6 flex items-center justify-between border-b border-gray-50 glassmorphism z-10">
-          <div className="flex items-center gap-4">
-            {!isSidebarOpen && (
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg md:block hidden">
-                <Maximize2 className="w-4 h-4 text-gray-400" />
+  const activeModelLabel = activeModel === 'flash' 
+    ? "Gemini 3.5 Flash (Grounded)"
+    : "Gemini Pro Engine";
+
+  return (
+    <div 
+      className={cn(
+        "font-sans pointer-events-auto transition-all duration-500 ease-in-out text-white bg-[#131314]",
+        isExpanded 
+          ? "fixed inset-0 z-[100] flex overflow-hidden w-screen h-screen" 
+          : "fixed bottom-6 right-6 w-[430px] h-[590px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-6rem)] shadow-2xl rounded-3xl border border-gray-800/80 flex flex-col z-[100] overflow-hidden"
+      )}
+    >
+      <audio ref={audioRef} className="hidden" />
+
+      {/* Embedded CSS for custom Gemini shimmers and animations */}
+      <style>{`
+        @keyframes geminiShimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .animate-gemini-shimmer {
+          background-size: 200% 100%;
+          animation: geminiShimmer 1.5s infinite linear;
+        }
+      `}</style>
+
+      {/* Expanded Sidebar View - ChatGPT/Gemini Recents List */}
+      {isExpanded && (
+        <motion.div 
+          animate={{ width: isSidebarOpen ? 260 : 0 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="h-full bg-[#1e1e20] hidden md:flex flex-col overflow-hidden relative shadow-xl shrink-0"
+        >
+          {/* Sidebar Header */}
+          <div className="p-5 flex items-center justify-between border-b border-gray-800/30">
+            <div className="flex items-center gap-2">
+              <GeminiStar className="w-5 h-5" />
+              <span className="font-display font-black text-xs uppercase tracking-widest text-[#ffd700]">Navigator Sessions</span>
+            </div>
+            <button 
+              onClick={() => setIsSidebarOpen(false)} 
+              className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
+              title="Close Sidebar"
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          
+          {/* Sidebar Chat Sessions list */}
+          <div className="flex-1 p-3 overflow-y-auto space-y-4">
+             <button 
+              onClick={() => startNewSession()}
+              className="w-full text-left p-3.5 rounded-full bg-[#2a2b2d] hover:bg-[#333537] text-xs font-black text-[#ffd700] uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer border border-gray-800"
+             >
+                <Plus className="w-4 h-4" /> New Chat
+             </button>
+             
+             <div className="pt-2">
+               <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-2 px-2.5">Saved Conversations</p>
+               <div className="space-y-1">
+                  {sessions.map(s => (
+                    <div 
+                      key={s.id} 
+                      onClick={() => loadSession(s)}
+                      className={cn(
+                        "group flex items-center justify-between px-3 py-2.5 rounded-full cursor-pointer transition-all border border-transparent",
+                        activeSessionId === s.id 
+                          ? "bg-gray-800 text-[#ffd700]" 
+                          : "text-gray-300 hover:bg-gray-800/40 hover:text-white"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <MessageCircle className={cn("w-3.5 h-3.5 shrink-0", activeSessionId === s.id ? "text-[#ffd700]" : "text-gray-500")} />
+                        <span className="text-xs font-semibold truncate max-w-[130px]">{s.title}</span>
+                      </div>
+                      <button 
+                        onClick={(e) => deleteSession(e, s.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
+                        title="Delete Session"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {sessions.length === 0 && (
+                    <p className="text-[10px] font-medium text-gray-500 italic p-2.5">No archived chats.</p>
+                  )}
+               </div>
+             </div>
+          </div>
+
+          {/* User Profile Footer */}
+          <div className="p-4 bg-[#1a1a1c] border-t border-gray-800/40 space-y-2">
+             <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#ffd700] text-[#004d39] font-black text-[10px] flex items-center justify-center">
+                  {profile?.displayName ? profile.displayName.charAt(0).toUpperCase() : 'S'}
+                </div>
+                <div className="flex-1 min-w-0">
+                   <p className="text-[11px] font-extrabold text-white truncate leading-none">{profile?.displayName || 'RU Student'}</p>
+                   <p className="text-[8px] font-bold text-emerald-400 uppercase tracking-wider mt-1">Grounded sync online</p>
+                </div>
+             </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col relative bg-[#131314]">
+        
+        {/* Universal Header (Compact + Expanded) */}
+        <div className="h-16 px-5 flex items-center justify-between border-b border-gray-800/30 bg-[#131314]/90 backdrop-blur z-10 shrink-0">
+          <div className="flex items-center gap-2.5">
+            {isExpanded && !isSidebarOpen && (
+              <button 
+                onClick={() => setIsSidebarOpen(true)} 
+                className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer hidden md:block"
+                title="Open Sidebar"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
               </button>
             )}
-            <div className="flex flex-col">
-              <h2 className="text-sm md:text-lg font-display font-black text-gray-900 tracking-tight">RU Informer AI</h2>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Multimodal Node</span>
+            <div className="flex items-center gap-2">
+              <GeminiStar className="w-5 h-5" />
+              <div>
+                <span className="font-display font-black text-sm tracking-tight text-white flex items-center gap-1.5">
+                  RU AI Chatbot
+                  <span className="px-1.5 py-0.5 rounded bg-[#ffd700]/10 text-[#ffd700] text-[9px] font-black uppercase tracking-widest border border-[#ffd700]/20">Grounded</span>
+                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-             <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
-                <Sparkles className="w-5 h-5" />
-             </button>
-             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
-                <X className="w-6 h-6" />
-             </button>
+          
+          <div className="flex items-center gap-1.5">
+            {/* Expanded / Minimize state Toggles */}
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)} 
+              className="p-2 hover:bg-gray-800/80 rounded-full text-gray-400 hover:text-white transition-colors cursor-pointer"
+              title={isExpanded ? "Minimize Chatbot" : "Maximize to Gemini Interface"}
+            >
+              {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            <button 
+              onClick={onClose} 
+              className="p-2 hover:bg-gray-800/80 rounded-full text-gray-400 hover:text-white transition-colors cursor-pointer"
+              title="Close Chat"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* Chat History */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8 md:py-12 space-y-10 scroll-smooth" ref={scrollRef}>
+        {/* Chat Stream History */}
+        <div className="flex-1 overflow-y-auto px-5 md:px-8 py-6 space-y-6 scroll-smooth" ref={scrollRef}>
           {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-12 max-w-2xl mx-auto py-12">
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-8 max-w-xl mx-auto py-8">
                <motion.div 
                  initial={{ scale: 0.8, opacity: 0 }}
                  animate={{ scale: 1, opacity: 1 }}
-                 className="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] bg-gradient-to-br from-[#006a4e] to-emerald-800 flex items-center justify-center shadow-2xl relative"
+                 className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1e3c72] to-[#2a5298] flex items-center justify-center shadow-lg relative"
                >
-                 <Bot className="w-10 h-10 md:w-12 md:h-12 text-[#ffd700]" />
-                 <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#ffd700] rounded-lg flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-4 h-4 text-[#006a4e]" />
+                 <GeminiStar className="w-7 h-7" />
+                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#ffd700] rounded-full flex items-center justify-center shadow-md">
+                   <Sparkles className="w-3 h-3 text-[#004d39]" />
                  </div>
                </motion.div>
-               <div className="space-y-6">
-                 <h1 className="text-3xl md:text-5xl font-display font-black text-gray-900 tracking-tight">How can I assist your RU journey?</h1>
-                 <p className="text-sm md:text-base text-gray-500 font-medium max-w-md mx-auto leading-relaxed">
-                   Upload documents, share photos of your syllabus, or record voice queries for advanced academic analysis.
+               
+               <div className="space-y-2">
+                 <h1 className="text-xl md:text-3xl font-display font-bold text-white tracking-tight">
+                   Hello, <span className="bg-gradient-to-r from-[#4285f4] via-[#9b72cb] to-[#ffd700] bg-clip-text text-transparent">{profile?.displayName || 'RU Student'}</span>
+                 </h1>
+                 <p className="text-sm text-gray-400 font-semibold max-w-sm mx-auto leading-relaxed">
+                   How can I synthesize Rajshahi University guides, clubs, or events for you today?
                  </p>
                </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+               {/* Suggestion Starter Cards */}
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full pt-2">
                   {[
-                    { q: 'Analyze my RU marksheet', icon: <ImageIcon className="w-4 h-4 text-emerald-500" /> },
-                    { q: 'Summary of TSC club events', icon: <Users className="w-4 h-4 text-blue-500" /> },
-                    { q: 'Spoken guide for BCS', icon: <Mic className="w-4 h-4 text-purple-500" /> },
-                    { q: 'Roadmap for Pharma Tech', icon: <Zap className="w-4 h-4 text-amber-500" /> }
+                    { q: 'Summarize latest TSC Club announcements & events', icon: <Users className="w-4 h-4 text-emerald-400" /> },
+                    { q: 'Give me department success hacks for academic excellence', icon: <GraduationCap className="w-4 h-4 text-amber-400" /> }
                   ].map(item => (
                     <button
                       key={item.q}
                       onClick={() => handleSend(undefined, item.q)}
-                      className="p-6 text-xs md:text-sm bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:border-[#006a4e] hover:shadow-md transition-all flex items-center justify-between group"
+                      className="p-3.5 text-left bg-[#1e1e20] border border-gray-800/40 rounded-2xl hover:border-gray-700 hover:bg-[#2a2a2c] transition-all flex items-start gap-3.5 group cursor-pointer"
                     >
-                      <div className="flex items-center gap-4 text-left font-bold text-gray-700">
-                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">{item.icon}</div>
-                        {item.q}
+                      <div className="w-8 h-8 rounded-xl bg-gray-900 flex items-center justify-center shrink-0 text-gray-400 group-hover:text-white transition-all">
+                        {item.icon}
                       </div>
-                      <ChevronRight className="w-4 h-4 text-gray-200 group-hover:text-[#006a4e]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-300 line-clamp-2 group-hover:text-white transition-colors leading-relaxed">{item.q}</p>
+                      </div>
                     </button>
                   ))}
                </div>
             </div>
           )}
 
+          {/* Messages Loop with AUTHENTIC GEMINI STYLING (No boxes for bot replies, starts with Star) */}
           {messages.map((m, i) => (
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               key={i}
               className={cn(
-                "flex gap-4 md:gap-8 max-w-5xl mx-auto",
-                m.role === 'user' ? "flex-row-reverse" : "flex-row"
+                "flex gap-3 md:gap-4 max-w-3xl mx-auto items-start",
+                m.role === 'user' ? "justify-end" : "justify-start"
               )}
             >
-              <div className={cn(
-                "w-8 h-8 md:w-12 md:h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
-                m.role === 'user' ? "bg-gray-100 text-gray-400" : "bg-[#004d39] text-[#ffd700]"
-              )}>
-                {m.role === 'user' ? <User className="w-4 h-4 md:w-6 md:h-6" /> : <Bot className="w-4 h-4 md:w-6 md:h-6" />}
-              </div>
+              {/* Gemini response layout with star icon and no box outline */}
+              {m.role === 'model' && (
+                <div className="w-8 h-8 rounded-full bg-[#1e1e20] flex items-center justify-center shrink-0 border border-gray-800/60 mt-1">
+                  <GeminiStar className="w-4.5 h-4.5" />
+                </div>
+              )}
               
-              <div className="flex-1 space-y-4 max-w-[85%] md:max-w-[70%]">
-                 <div className={cn(
-                   "p-5 md:p-8 rounded-[2rem] shadow-sm text-sm md:text-base leading-relaxed font-medium",
-                   m.role === 'user' 
-                    ? "bg-gray-50 text-gray-800 rounded-tr-none border border-gray-100" 
-                    : "bg-white text-gray-900 rounded-tl-none border border-emerald-50"
-                 )}>
-                   {m.parts.map((p, idx) => (
-                     <div key={idx} className="space-y-4">
-                       {p.text && <p className="whitespace-pre-wrap">{p.text}</p>}
-                       {p.inlineData && (
-                         <div className="rounded-2xl overflow-hidden border border-gray-100 max-w-sm mt-4">
-                           {p.inlineData.mimeType.startsWith('image/') ? (
-                             <img 
-                               src={`data:${p.inlineData.mimeType};base64,${p.inlineData.data}`} 
-                               alt="AI Content" 
-                               className="w-full h-auto object-cover"
-                             />
-                           ) : p.inlineData.mimeType === 'application/pdf' ? (
-                             <div className="p-6 bg-blue-50 flex items-center gap-4">
-                               <FileText className="w-8 h-8 text-blue-500" />
-                               <div className="text-left">
-                                 <p className="text-sm font-black text-blue-900">Document Uploaded</p>
-                                 <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">PDF Data Node</p>
-                               </div>
-                             </div>
-                           ) : p.inlineData.mimeType.startsWith('audio/') ? (
-                             <div className="p-6 bg-red-50 flex items-center gap-4">
-                               <Mic className="w-8 h-8 text-red-500" />
-                               <div className="text-left">
-                                 <p className="text-sm font-black text-red-900">Audio Node</p>
-                                 <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Voice Processing</p>
-                               </div>
-                             </div>
-                           ) : (
-                             <div className="p-6 bg-gray-50 flex items-center gap-4">
-                               <Paperclip className="w-8 h-8 text-gray-500" />
-                               <p className="text-sm font-black text-gray-900">Generic Data attachment</p>
-                             </div>
-                           )}
-                         </div>
-                       )}
-                       {p.audioUrl && (
-                         <button 
-                           onClick={() => playSpeech(p.audioUrl!)}
-                           className="flex items-center gap-3 px-4 py-2 bg-emerald-50 text-[#006a4e] rounded-xl hover:bg-emerald-100 transition-colors mt-4 font-black text-xs uppercase"
-                         >
-                           <Volume2 className="w-4 h-4" /> Listen to Audio
-                         </button>
-                       )}
-                     </div>
-                   ))}
-                 </div>
+              <div className={cn(
+                "flex-1 min-w-0",
+                m.role === 'user' 
+                  ? "bg-[#1e1e20] text-gray-200 rounded-2xl px-4 py-2.5 max-w-[85%] self-end ml-auto border border-gray-800/30" 
+                  : "pt-2 pb-6 text-gray-100"
+              )}>
+                {m.parts.map((p, idx) => (
+                  <div key={idx} className="space-y-3">
+                    {p.text && (
+                      <div className="relative group">
+                        <Markdown text={p.text} />
+                        
+                        {/* Gemini-style Quick action tools under responses */}
+                        {m.role === 'model' && (
+                          <div className="flex items-center gap-3 mt-4 text-gray-400 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => copyToClipboard(p.text!, i)}
+                              className="p-1.5 hover:bg-gray-800/60 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+                              title="Copy response text"
+                            >
+                              {copiedId === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedId === i ? "Copied" : "Copy"}
+                            </button>
+
+                            {p.audioUrl && (
+                              <button 
+                                onClick={() => playSpeech(p.audioUrl!)}
+                                className="p-1.5 hover:bg-gray-800/60 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+                                title="Listen to response"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" /> Listen
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Media Inline Data Rendering */}
+                    {p.inlineData && (
+                      <div className="rounded-2xl overflow-hidden border border-gray-800/80 max-w-sm mt-2.5 bg-[#1e1e20]">
+                        {p.inlineData.mimeType.startsWith('image/') ? (
+                          <img 
+                            src={`data:${p.inlineData.mimeType};base64,${p.inlineData.data}`} 
+                            alt="Visual query" 
+                            className="w-full h-auto object-cover max-h-64"
+                          />
+                        ) : p.inlineData.mimeType === 'application/pdf' ? (
+                          <div className="p-4 flex items-center gap-3">
+                            <FileText className="w-7 h-7 text-red-400" />
+                            <div className="text-left">
+                              <p className="text-xs font-black text-gray-100">PDF Document Attached</p>
+                              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Grounding index ready</p>
+                            </div>
+                          </div>
+                        ) : p.inlineData.mimeType.startsWith('audio/') ? (
+                          <div className="p-4 flex items-center gap-3">
+                            <Mic className="w-7 h-7 text-emerald-400 animate-pulse" />
+                            <div className="text-left">
+                              <p className="text-xs font-black text-gray-100">Voice Query Captured</p>
+                              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Audio Processed</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-4 flex items-center gap-3">
+                            <Paperclip className="w-7 h-7 text-gray-500" />
+                            <p className="text-xs font-black text-gray-300">Generic attachment</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </motion.div>
           ))}
 
+          {/* Gemini Shimmer loader wave */}
           {loading && (
-            <div className="flex gap-4 md:gap-8 max-w-5xl mx-auto items-start">
-              <div className="w-8 h-8 md:w-12 md:h-12 rounded-2xl bg-[#004d39] flex items-center justify-center animate-pulse shrink-0">
-                <Bot className="w-4 h-4 md:w-6 md:h-6 text-[#ffd700]" />
+            <div className="flex gap-3 md:gap-4 max-w-3xl mx-auto items-start">
+              <div className="w-8 h-8 rounded-full bg-[#1e1e20] flex items-center justify-center shrink-0 border border-gray-800/60 mt-1">
+                <GeminiStar className="w-4.5 h-4.5" />
               </div>
-              <div className="p-6 md:p-8 bg-gray-50 rounded-[2rem] rounded-tl-none border border-gray-100 flex items-center gap-3">
-                 <div className="flex gap-1.5">
-                    <div className="w-2 h-2 bg-[#006a4e] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-2 h-2 bg-[#006a4e] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-[#006a4e] rounded-full animate-bounce"></div>
-                 </div>
+              <div className="flex-1 space-y-3 pt-2">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider animate-pulse">Thinking & Synthesizing...</p>
+                <div className="space-y-2.5 max-w-xl">
+                  <div className="h-3 w-full bg-gradient-to-r from-[#1e1e20] via-[#2d2e30] to-[#1e1e20] rounded-full animate-gemini-shimmer" />
+                  <div className="h-3 w-[85%] bg-gradient-to-r from-[#1e1e20] via-[#2d2e30] to-[#1e1e20] rounded-full animate-gemini-shimmer" />
+                  <div className="h-3 w-[60%] bg-gradient-to-r from-[#1e1e20] via-[#2d2e30] to-[#1e1e20] rounded-full animate-gemini-shimmer" />
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 md:p-8 bg-white border-t border-gray-50 z-20">
-          <div className="max-w-4xl mx-auto space-y-4">
-            {/* Staged Files Preview */}
+        {/* Input area */}
+        <div className="p-4 bg-[#131314] border-t border-gray-800/30 z-20 shrink-0">
+          <div className="max-w-3xl mx-auto space-y-3.5">
+            {/* Staged file list preview */}
             <AnimatePresence>
               {stagedFiles.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="flex flex-wrap gap-3 pb-2"
+                  className="flex flex-wrap gap-2.5 pb-1"
                 >
                   {stagedFiles.map((staged, idx) => (
                     <div key={idx} className="relative group">
-                      <div className="w-20 h-20 rounded-2xl border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center text-gray-400">
+                      <div className="w-14 h-14 rounded-xl border border-gray-800 bg-[#1e1e20] overflow-hidden flex items-center justify-center text-gray-500 shadow-inner">
                         {staged.type === 'image' ? (
                           <img src={staged.preview} className="w-full h-full object-cover" />
                         ) : staged.type === 'audio' ? (
-                          <Mic className="w-6 h-6 text-red-500" />
+                          <Mic className="w-5 h-5 text-emerald-400" />
                         ) : (
-                          <FileText className="w-6 h-6 text-blue-500" />
+                          <FileText className="w-5 h-5 text-red-400" />
                         )}
                       </div>
                       <button 
                         onClick={() => removeStagedFile(idx)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white p-1 rounded-full shadow-md opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+                        title="Remove file"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
@@ -550,17 +799,18 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSend} className="relative flex items-center gap-3">
+            {/* Input pill form container */}
+            <form onSubmit={handleSend} className="relative flex items-center gap-2.5">
                <div className="flex-1 relative group">
                   <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Describe, upload images, or record voice..."
+                    placeholder="Ask Gemini to study guides, BCS, RU events..."
                     disabled={loading}
-                    className="w-full p-5 md:p-7 pr-32 md:pr-40 bg-gray-50 border border-gray-200 rounded-[2rem] focus:bg-white focus:border-[#006a4e] focus:ring-4 focus:ring-[#006a4e]/5 transition-all outline-none font-bold text-gray-800 shadow-sm"
+                    className="w-full p-4 md:p-4.5 pr-24 bg-[#1e1e20] border border-gray-800/60 rounded-3xl focus:bg-[#1a1a1c] focus:border-gray-700 focus:ring-4 focus:ring-gray-800/50 transition-all outline-none font-medium text-gray-100 text-xs md:text-sm shadow-inner"
                   />
-                  <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 md:gap-4">
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                      <input 
                        type="file" 
                        ref={fileInputRef} 
@@ -572,41 +822,41 @@ export default function MentorChat({ initialMessage, onClose }: { initialMessage
                      <button 
                        type="button"
                        onClick={() => fileInputRef.current?.click()}
-                       className="p-2 md:p-3 hover:bg-emerald-50 text-gray-400 hover:text-[#006a4e] rounded-xl transition-all"
+                       className="p-1.5 hover:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-all cursor-pointer"
+                       title="Attach files (PDF, images, audio)"
                      >
-                        <Paperclip className="w-5 h-5" />
+                        <Paperclip className="w-4 h-4" />
                      </button>
                      <button 
                        type="button"
                        className={cn(
-                         "p-2 md:p-3 rounded-xl transition-all",
-                         isRecording ? "bg-red-50 text-red-500 scale-110 animate-pulse" : "hover:bg-emerald-50 text-gray-400 hover:text-[#006a4e]"
+                         "p-1.5 rounded-lg transition-all cursor-pointer",
+                         isRecording ? "bg-red-500/20 text-red-400 scale-110 animate-pulse" : "hover:bg-gray-800 text-gray-400 hover:text-white"
                        )}
                        onClick={toggleRecording}
+                       title="Voice Message"
                      >
-                        <Mic className={cn("w-5 h-5", isRecording && "fill-current")} />
+                        <Mic className={cn("w-4 h-4", isRecording && "fill-current")} />
                      </button>
                   </div>
                </div>
                <button
                  type="submit"
                  disabled={(!input.trim() && stagedFiles.length === 0) || loading}
-                 className="p-5 md:p-7 bg-[#006a4e] text-white rounded-[2rem] hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#006a4e]/20 disabled:grayscale disabled:opacity-50 shrink-0"
+                 className="p-4 bg-gradient-to-r from-[#4285f4] via-[#9b72cb] to-[#ffd700] text-white font-extrabold rounded-3xl hover:scale-105 active:scale-95 transition-all shadow-md disabled:grayscale disabled:opacity-40 disabled:scale-100 shrink-0 cursor-pointer"
+                 title="Send Message"
                >
-                 <Send className="w-6 h-6" />
+                 <Send className="w-4.5 h-4.5" />
                </button>
             </form>
             
-            <div className="flex items-center justify-between px-6 py-2">
-               <div className="flex items-center gap-4 text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">
-                 <span className="flex items-center gap-2 decoration-emerald-500/30 underline underline-offset-4 decoration-2">
-                   <Zap className="w-3 h-3" /> Real-time Pro Node
+            <div className="flex items-center justify-between px-2 pt-0.5 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+               <div className="flex items-center gap-2">
+                 <span className="flex items-center gap-1 text-[#ffd700]">
+                   <Zap className="w-3 h-3 text-[#ffd700]" /> Gemini 3.5 Grounded
                  </span>
                  <span>•</span>
-                 <span>Multimodal Engine</span>
-               </div>
-               <div className="text-[9px] font-black text-emerald-400/50 uppercase tracking-widest hidden md:block">
-                  Secure Peer-to-Peer Encryption
+                 <span>Sourced from RU TSC & Academic guides</span>
                </div>
             </div>
           </div>

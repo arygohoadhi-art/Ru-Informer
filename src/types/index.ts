@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'admin';
+export type UserRole = 'student' | 'admin' | 'author';
 
 export interface StudentDNA {
   dept: string;
@@ -53,6 +53,16 @@ export interface CareerResource {
   icon?: string;
 }
 
+export interface Article {
+  id?: string;
+  title: string;
+  content: string;
+  category: string;
+  readingTime: string;
+  authorId: string;
+  authorName: string;
+  createdAt: any;
+}
 
 export interface ClubEvent {
   id: string;
@@ -65,6 +75,10 @@ export interface ClubEvent {
   paymentDetails: string;
   skillsTargeted: string;
   dateTime: string;
+  date?: string;
+  time?: string;
+  duration?: string;
+  fee?: string;
   contact: {
     whatsapp: string;
     email: string;
@@ -73,6 +87,31 @@ export interface ClubEvent {
   adminId: string;
   adminName: string;
   eventVector?: number[];
+  createdAt: any;
+}
+
+export interface ClubFeedItem {
+  id?: string;
+  clubId: string;
+  type: 'news' | 'event' | 'history' | 'achievement' | 'ceremony' | 'update';
+  title: string;
+  content: string;
+  date?: string;
+  time?: string;
+  link?: string;
+  adminId: string;
+  adminName: string;
+  createdAt: any;
+}
+
+export interface MediaResource {
+  id?: string;
+  title: string;
+  type: 'PDF' | 'Word' | 'Video' | 'Audio' | 'Website' | 'Other';
+  url: string;
+  description: string;
+  authorId: string;
+  authorName: string;
   createdAt: any;
 }
 

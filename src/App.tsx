@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { auth, db, OperationType, handleFirestoreError } from './lib/firebase';
 import { UserProfile, UserRole } from './types';
 import Login from './components/Login';
 import Onboarding from './components/Onboarding';
 import StudentDashboard from './components/StudentDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import AuthorDashboard from './components/AuthorDashboard';
 import { Loader2, GraduationCap } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -14,30 +15,50 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeRoleView, setActiveRoleView] = useState<'student' | 'admin' | 'author' | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeProfile: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
+
       if (firebaseUser) {
         try {
           const docRef = doc(db, 'users', firebaseUser.uid);
-          const docSnap = await getDoc(docRef);
-          
-          if (docSnap.exists()) {
-            setProfile(docSnap.data() as UserProfile);
-          } else {
-            setProfile(null);
-          }
+          unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const profileData = docSnap.data() as UserProfile;
+              setProfile(profileData);
+              setActiveRoleView((prev) => prev || profileData.role);
+            } else {
+              setProfile(null);
+              setActiveRoleView(null);
+            }
+            setLoading(false);
+          }, (error) => {
+            handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+            setLoading(false);
+          });
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+          setLoading(false);
         }
       } else {
         setProfile(null);
+        setActiveRoleView(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
 
   const handleRoleSelect = async (role: UserRole) => {
@@ -55,6 +76,7 @@ export default function App() {
       };
       await setDoc(doc(db, 'users', user.uid), newProfile);
       setProfile(newProfile);
+      setActiveRoleView(role);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
     } finally {
@@ -91,20 +113,27 @@ export default function App() {
             <p className="text-gray-500 font-medium italic text-sm">Please select your role to continue.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <button
               onClick={() => handleRoleSelect('student')}
-              className="group flex flex-col items-center justify-center p-6 border-2 border-gray-50 rounded-2xl hover:border-[#006a4e] hover:bg-emerald-50 transition-all"
+              className="group flex flex-col items-center justify-center p-4 border-2 border-gray-50 rounded-2xl hover:border-[#006a4e] hover:bg-emerald-50 transition-all cursor-pointer"
             >
-              <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center text-3xl mb-3">🎓</div>
-              <span className="font-black text-[#006a4e] uppercase tracking-widest text-[10px]">Student</span>
+              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl mb-3">🎓</div>
+              <span className="font-black text-[#006a4e] uppercase tracking-widest text-[9px]">Student</span>
             </button>
             <button
               onClick={() => handleRoleSelect('admin')}
-              className="group flex flex-col items-center justify-center p-6 border-2 border-gray-50 rounded-2xl hover:border-[#ffd700] hover:bg-yellow-50 transition-all"
+              className="group flex flex-col items-center justify-center p-4 border-2 border-gray-50 rounded-2xl hover:border-[#ffd700] hover:bg-yellow-50 transition-all cursor-pointer"
             >
-              <div className="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center text-3xl mb-3">🏛️</div>
-              <span className="font-black text-yellow-700 uppercase tracking-widest text-[10px]">Club Admin</span>
+              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl mb-3">🏛️</div>
+              <span className="font-black text-yellow-700 uppercase tracking-widest text-[9px]">Club Admin</span>
+            </button>
+            <button
+              onClick={() => handleRoleSelect('author')}
+              className="group flex flex-col items-center justify-center p-4 border-2 border-gray-50 rounded-2xl hover:border-purple-500 hover:bg-purple-50 transition-all cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-3">✍️</div>
+              <span className="font-black text-purple-700 uppercase tracking-widest text-[9px]">Author</span>
             </button>
           </div>
           
@@ -114,12 +143,42 @@ export default function App() {
     );
   }
 
-  if (profile.role === 'student') {
+  if (activeRoleView === 'student') {
     if (!profile.onboardingComplete) {
-      return <Onboarding profile={profile} onComplete={(updatedProfile) => setProfile(updatedProfile)} />;
+      return (
+        <Onboarding 
+          profile={profile} 
+          onComplete={(updatedProfile) => {
+            setProfile(updatedProfile);
+            setActiveRoleView(updatedProfile.role);
+          }} 
+        />
+      );
     }
-    return <StudentDashboard profile={profile} />;
+    return (
+      <StudentDashboard 
+        profile={profile} 
+        activeRoleView={activeRoleView} 
+        onRoleChange={setActiveRoleView} 
+      />
+    );
   }
 
-  return <AdminDashboard profile={profile} />;
+  if (activeRoleView === 'author') {
+    return (
+      <AuthorDashboard 
+        profile={profile} 
+        activeRoleView={activeRoleView} 
+        onRoleChange={setActiveRoleView} 
+      />
+    );
+  }
+
+  return (
+    <AdminDashboard 
+      profile={profile} 
+      activeRoleView={activeRoleView} 
+      onRoleChange={setActiveRoleView} 
+    />
+  );
 }

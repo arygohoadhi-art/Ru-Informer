@@ -13,8 +13,10 @@ async function testConnection() {
     await getDocFromServer(doc(db, 'test', 'connection'));
     console.log("Firestore connection successful");
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Firestore Error: The client is offline. Please check your Firebase configuration in the Secrets panel or ensure you have a healthy internet connection.");
+    if (error instanceof Error) {
+      console.warn("Firestore connection check status:", error.message);
+    } else {
+      console.warn("Firestore connection check status: unknown offline/lag signal");
     }
   }
 }

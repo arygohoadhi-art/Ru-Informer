@@ -1,26 +1,82 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError, auth } from '../lib/firebase';
-import { UserProfile, ClubEvent, Notification, EventFeedback } from '../types';
+import { UserProfile, ClubEvent, Notification, EventFeedback, ClubFeedItem, Article, MediaResource } from '../types';
 import { cn, cosineSimilarity } from '../lib/utils';
-import { Calendar, MapPin, Target, MessageSquare, Loader2, LogOut, Heart, Briefcase, Bell, X, ExternalLink, ChevronRight, MessageCircle, Sparkles, User, GraduationCap, DollarSign, Users, LayoutDashboard, Rocket, Search, Star, Edit3, Save, TrendingUp, Compass, Menu, Book, Linkedin, Globe, Cpu, Bot, Zap } from 'lucide-react';
+import { Calendar, MapPin, Target, MessageSquare, Loader2, LogOut, Heart, Briefcase, Bell, X, ExternalLink, ChevronRight, MessageCircle, Sparkles, User, GraduationCap, DollarSign, Users, LayoutDashboard, Rocket, Search, Star, Edit3, Save, TrendingUp, Compass, Menu, Book, BookOpen, Linkedin, Globe, Cpu, Bot, Zap, FileUp, Video, Music, File } from 'lucide-react';
 import Onboarding from './Onboarding';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import MentorChat from './MentorChat';
+import AICampusSynthesizer from './AICampusSynthesizer';
 import { CareerResource } from '../types';
+import { CLUBS_DATA, UniversityClub } from '../lib/clubs';
+import { generateRoadmap } from '../services/geminiService';
+import RecommendationSandbox from './RecommendationSandbox';
+import ClubDetailView from './ClubDetailView';
+import EventCalendar from './EventCalendar';
+import CareerResourcesDirectory from './CareerResourcesDirectory';
 
-export default function StudentDashboard({ profile }: { profile: UserProfile }) {
+
+
+const ruBackgroundImages: Record<string, string> = {
+  overview: "https://upload.wikimedia.org/wikipedia/commons/e/e4/Administrative_Building_of_Rajshahi_University.jpg",
+  sandbox: "https://upload.wikimedia.org/wikipedia/commons/4/4e/Shabash_Bangladesh%2C_Rajshahi_University.jpg",
+  calendar: "https://upload.wikimedia.org/wikipedia/commons/e/ec/Shaheed_Minar_at_Rajshahi_University.jpg",
+  roadmap: "https://upload.wikimedia.org/wikipedia/commons/4/4e/Shabash_Bangladesh%2C_Rajshahi_University.jpg",
+  clubs: "https://upload.wikimedia.org/wikipedia/commons/e/ec/Shaheed_Minar_at_Rajshahi_University.jpg",
+  career: "https://upload.wikimedia.org/wikipedia/commons/e/e4/Paris_Road%2C_Rajshahi_University.jpg",
+  insights: "https://upload.wikimedia.org/wikipedia/commons/e/ec/Paris_Road%2C_Rajshahi_University_03.jpg",
+  profile: "https://upload.wikimedia.org/wikipedia/commons/e/e4/Paris_Road%2C_Rajshahi_University.jpg",
+  manual: "https://upload.wikimedia.org/wikipedia/commons/e/e4/Administrative_Building_of_Rajshahi_University.jpg",
+  settings: "https://upload.wikimedia.org/wikipedia/commons/e/ec/Shaheed_Minar_at_Rajshahi_University.jpg",
+};
+
+interface StudentDashboardProps {
+  profile: UserProfile;
+  activeRoleView?: 'student' | 'admin' | 'author';
+  onRoleChange?: (role: 'student' | 'admin' | 'author') => void;
+}
+
+export default function StudentDashboard({ profile, activeRoleView, onRoleChange }: StudentDashboardProps) {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [careerResources, setCareerResources] = useState<CareerResource[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [clubFeedItems, setClubFeedItems] = useState<ClubFeedItem[]>([]);
+  const [mediaResources, setMediaResources] = useState<MediaResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedEventForFeedback, setSelectedEventForFeedback] = useState<ClubEvent | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'roadmap' | 'clubs' | 'career' | 'profile' | 'manual' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'roadmap' | 'clubs' | 'career' | 'profile' | 'manual' | 'settings' | 'sandbox' | 'insights' | 'calendar' | 'chat'>('overview');
   const [aiSearchQuery, setAiSearchQuery] = useState('');
   const [showAIChat, setShowAIChat] = useState(false);
+  const [clubSearchQuery, setClubSearchQuery] = useState('');
+  const [selectedClubCategory, setSelectedClubCategory] = useState<string>('All');
+  const [expandedClubId, setExpandedClubId] = useState<string | null>(null);
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [selectedArticleCategory, setSelectedArticleCategory] = useState<string>('All');
+  const [articleSearchQuery, setArticleSearchQuery] = useState('');
+  const [insightsSubTab, setInsightsSubTab] = useState<'articles' | 'media' | 'synthesis'>('articles');
+  const [mediaSearchQuery, setMediaSearchQuery] = useState('');
+  const [selectedMediaType, setSelectedMediaType] = useState<string>('All');
+  const [activeToast, setActiveToast] = useState<Notification | null>(null);
+  const [prevNotifications, setPrevNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    if (notifications.length > 0 && prevNotifications.length > 0) {
+      const newUnread = notifications.find(n => !n.read && !prevNotifications.some(prev => prev.id === n.id));
+      if (newUnread) {
+        setActiveToast(newUnread);
+        const timer = setTimeout(() => {
+          setActiveToast(null);
+        }, 7000);
+        return () => clearTimeout(timer);
+      }
+    }
+    setPrevNotifications(notifications);
+  }, [notifications]);
 
   useEffect(() => {
     const handleSwitchTab = (e: any) => setActiveTab(e.detail);
@@ -63,36 +119,122 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
       setNotifications(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Notification)));
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'notifications'));
 
-    return () => { unsubEvents(); unsubCareer(); unsubNotifs(); };
+    const feedsQuery = query(collection(db, 'clubFeeds'), orderBy('createdAt', 'desc'));
+    const unsubFeeds = onSnapshot(feedsQuery, (snapshot) => {
+      setClubFeedItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ClubFeedItem)));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'clubFeeds'));
+
+    const articlesQuery = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
+    const unsubArticles = onSnapshot(articlesQuery, (snapshot) => {
+      setArticles(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Article)));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'articles'));
+
+    const mediaQuery = query(collection(db, 'mediaResources'), orderBy('createdAt', 'desc'));
+    const unsubMedia = onSnapshot(mediaQuery, (snapshot) => {
+      setMediaResources(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MediaResource)));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'mediaResources'));
+
+    return () => { unsubEvents(); unsubCareer(); unsubNotifs(); unsubFeeds(); unsubArticles(); unsubMedia(); };
   }, [profile.uid]);
 
   const competitionEvents = events.filter(e => e.category === 'Competition');
   const professionalEvents = events.filter(e => e.category === 'Seminar' || e.category === 'Course' || e.category === 'Competition');
   const festivalEvents = events.filter(e => e.category === 'Festival');
 
-  const ruClubs = [
-    "Rajshahi University Career Club (RUCC)",
-    "RU Debating Organization (RUDO)",
-    "Rajshahi University IT Society (RUITS)",
-    "Language Club, RU",
-    "Pharmacy Association, RU",
-    "Science Club, RU",
-    "Tourist Club, RU"
-  ];
-
   if (!profile.onboardingComplete) return <Onboarding profile={profile} onComplete={() => window.location.reload()} />;
 
   return (
-    <div className="min-h-screen bg-[#f8fbfa] flex flex-col md:flex-row shadow-inner selection:bg-[#ffd700] selection:text-[#004d39] pb-24 md:pb-0">
+    <div className="min-h-screen bg-[#f8fbfa] flex flex-col md:flex-row shadow-inner selection:bg-[#ffd700] selection:text-[#004d39] pb-24 md:pb-0 relative">
+      {/* Dynamic Rajshahi University Page-Specific Background Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 0.08, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.6 }}
+            style={{
+              backgroundImage: `url(${ruBackgroundImages[activeTab] || ruBackgroundImages.overview})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+            className="absolute inset-0"
+          />
+        </AnimatePresence>
+        {/* Subtle off-white & emerald tint gradient overlay to ensure perfect accessibility & contrast */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#f8fbfa]/95 via-[#f8fbfa]/70 to-[#f8fbfa]/95" />
+      </div>
+
+      {/* Real-time Toast Notifications */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-[200] max-w-sm w-full bg-[#004d39] text-white p-6 rounded-3xl shadow-2xl border border-white/10 flex flex-col gap-3 shadow-[#004d39]/10"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#ffd700] animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#ffd700]">Live Match Alert!</span>
+              </div>
+              <button onClick={() => setActiveToast(null)} className="text-white/60 hover:text-white cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs font-bold leading-relaxed">{activeToast.message}</p>
+            <div className="flex gap-2 mt-1">
+              <button
+                onClick={() => {
+                  setActiveTab('calendar');
+                  setActiveToast(null);
+                }}
+                className="px-3.5 py-1.5 bg-[#ffd700] text-[#004d39] rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              >
+                View Calendar
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const ref = doc(db, 'notifications', activeToast.id);
+                    await updateDoc(ref, { read: true });
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  setActiveToast(null);
+                }}
+                className="px-3.5 py-1.5 bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-white/20 transition-all cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b sticky top-0 z-[60]">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-[#006a4e] rounded-lg flex items-center justify-center shadow-sm">
             <GraduationCap className="text-[#ffd700] w-5 h-5" />
           </div>
-          <span className="font-display font-black text-lg text-[#004d39] tracking-tighter">RU Informer</span>
+          <button onClick={() => setActiveTab('overview')} className="font-display font-black text-lg text-[#004d39] tracking-tighter">RU Informer</button>
         </div>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setActiveTab('profile')}
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center relative border transition-all",
+              activeTab === 'profile' 
+                ? "bg-[#006a4e] border-[#006a4e] text-white" 
+                : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100"
+            )}
+            title="Edit Profile"
+          >
+            <User className="w-5 h-5" />
+          </button>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
             className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center relative border border-gray-100"
@@ -109,28 +251,31 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-6 left-4 right-4 z-[70]">
-        <div className="bg-[#004d39]/90 backdrop-blur-xl rounded-[2rem] p-2 flex items-center justify-between shadow-2xl border border-white/10">
-          {[
-            { id: 'overview', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Hub' },
-            { id: 'roadmap', icon: <Rocket className="w-5 h-5" />, label: 'Path' },
-            { id: 'career', icon: <Book className="w-5 h-5" />, label: 'Guides' },
-            { id: 'settings', icon: <Cpu className="w-5 h-5" />, label: 'System' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
-              className={cn(
-                "flex-1 flex flex-col items-center gap-1 py-2.5 transition-all rounded-2xl",
-                activeTab === item.id ? "bg-[#ffd700] text-[#004d39] shadow-lg shadow-[#ffd700]/20 scale-110" : "text-white/40"
-              )}
-            >
-              {item.icon}
-              <span className="text-[8px] font-black uppercase tracking-[0.1em]">{item.label}</span>
-            </button>
-          ))}
+      {activeTab !== 'chat' && (
+        <div className="md:hidden fixed bottom-6 left-4 right-4 z-[70]">
+          <div className="bg-[#004d39]/90 backdrop-blur-xl rounded-[2rem] p-2 flex items-center justify-between shadow-2xl border border-white/10">
+            {[
+              { id: 'overview', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Hub' },
+              { id: 'sandbox', icon: <Zap className="w-5 h-5" />, label: 'Sandbox' },
+              { id: 'roadmap', icon: <Rocket className="w-5 h-5" />, label: 'Path' },
+              { id: 'career', icon: <Book className="w-5 h-5" />, label: 'Guides' },
+              { id: 'settings', icon: <Cpu className="w-5 h-5" />, label: 'System' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1 py-2.5 transition-all rounded-2xl",
+                  activeTab === item.id ? "bg-[#ffd700] text-[#004d39] shadow-lg shadow-[#ffd700]/20 scale-110" : "text-white/40"
+                )}
+              >
+                {item.icon}
+                <span className="text-[8px] font-black uppercase tracking-[0.1em]">{item.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Sidebar Navigation */}
       <aside className={cn(
@@ -138,19 +283,65 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
         isMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-8 h-full flex flex-col">
-          <div className="hidden md:flex items-center gap-3 mb-10">
+          <div className="hidden md:flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-[#006a4e] rounded-xl flex items-center justify-center shadow-lg transform -rotate-6">
               <GraduationCap className="text-[#ffd700] w-6 h-6" />
             </div>
-            <span className="font-display font-black text-xl text-[#004d39] tracking-tighter">RU Informer</span>
+            <button onClick={() => setActiveTab('overview')} className="font-display font-black text-xl text-[#004d39] tracking-tighter">RU Informer</button>
           </div>
+
+          {activeRoleView && onRoleChange && (
+            <div className="mb-6 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                Active Session View
+              </span>
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => onRoleChange("student")}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
+                    activeRoleView === "student"
+                      ? "bg-[#006a4e] text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-[#006a4e]"
+                  )}
+                >
+                  🎓 View as Student
+                </button>
+                <button
+                  onClick={() => onRoleChange("admin")}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
+                    activeRoleView === "admin"
+                      ? "bg-[#006a4e] text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-[#006a4e]"
+                  )}
+                >
+                  🏛️ View as Club Admin
+                </button>
+                <button
+                  onClick={() => onRoleChange("author")}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-left transition-all",
+                    activeRoleView === "author"
+                      ? "bg-[#006a4e] text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-[#006a4e]"
+                  )}
+                >
+                  ✍️ View as Author
+                </button>
+              </div>
+            </div>
+          )}
 
           <nav className="space-y-1">
             {[
               { id: 'overview', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Overview' },
+              { id: 'sandbox', icon: <Zap className="w-5 h-5 text-yellow-500" />, label: 'Instant Match' },
+              { id: 'calendar', icon: <Calendar className="w-5 h-5 text-indigo-500" />, label: 'Event Calendar' },
               { id: 'roadmap', icon: <Rocket className="w-5 h-5" />, label: 'Roadmap' },
               { id: 'clubs', icon: <Users className="w-5 h-5" />, label: 'Clubs' },
               { id: 'career', icon: <Book className="w-5 h-5" />, label: 'Career DB' },
+              { id: 'insights', icon: <BookOpen className="w-5 h-5" />, label: 'Campus Insights' },
               { id: 'profile', icon: <User className="w-5 h-5" />, label: 'Profile DNA' },
               { id: 'manual', icon: <Compass className="w-5 h-5" />, label: 'Manual' },
               { id: 'settings', icon: <Cpu className="w-5 h-5" />, label: 'System Settings' },
@@ -177,15 +368,27 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
           </nav>
 
           <div className="mt-auto pt-8 border-t border-gray-50 space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="w-9 h-9 bg-[#ffd700] rounded-lg flex items-center justify-center text-[#004d39] font-black shrink-0">
+            <button 
+              onClick={() => setActiveTab('profile')}
+              className={cn(
+                "w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all group/sidebar-profile",
+                activeTab === 'profile'
+                  ? "bg-emerald-50 border-emerald-200 text-[#006a4e]"
+                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-500 hover:border-gray-200"
+              )}
+              title="Click to view/edit profile"
+            >
+              <div className="w-9 h-9 bg-[#ffd700] rounded-lg flex items-center justify-center text-[#004d39] font-black shrink-0 group-hover/sidebar-profile:scale-105 transition-transform">
                 {profile.displayName?.charAt(0) || 'S'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-gray-900 truncate">{profile.displayName || 'Student'}</p>
+                <p className="text-xs font-black text-gray-900 truncate flex items-center gap-1 group-hover/sidebar-profile:text-[#006a4e] transition-colors">
+                  {profile.displayName || 'Student'}
+                  <Edit3 className="w-3 h-3 opacity-0 group-hover/sidebar-profile:opacity-100 transition-opacity text-[#006a4e]" />
+                </p>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{profile.studentDNA?.dept || 'RU'}</p>
               </div>
-            </div>
+            </button>
             <button 
               onClick={() => signOut(auth)}
               className="w-full flex items-center gap-4 px-6 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-50 transition-all"
@@ -198,29 +401,40 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 px-4 md:px-12 py-6 md:py-10 overflow-y-auto">
+      <main className="flex-1 px-4 md:px-12 py-6 md:py-10 overflow-y-auto relative z-10">
         <header className="hidden md:flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-display font-black text-[#004d39]">
               {activeTab === 'overview' && "Campus Intelligence"}
+              {activeTab === 'sandbox' && "Instant Recommend Sandbox"}
+              {activeTab === 'calendar' && "Campus Event Chronology"}
               {activeTab === 'roadmap' && "Career Synthesis"}
               {activeTab === 'clubs' && "Club Matching Agency"}
               {activeTab === 'career' && "Career Database"}
+              {activeTab === 'insights' && "Campus Insights Hub"}
               {activeTab === 'manual' && "Operation Manual"}
               {activeTab === 'profile' && "Academic DNA Studio"}
             </h2>
-            <p className="text-sm md:text-base text-gray-400 font-medium mt-1">
-              Welcome back, {profile.displayName?.split(' ')[0] || 'Junior'}.
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm md:text-base text-gray-400 font-medium">
+                Welcome back, {profile.displayName?.split(' ')[0] || 'Junior'}.
+              </p>
+              <button 
+                onClick={() => setActiveTab('profile')} 
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#006a4e] hover:text-[#004d39] hover:underline bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/50 transition-all cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-4 self-end md:self-auto">
             <button 
-              onClick={() => setShowAIChat(true)}
-              className="px-6 py-3 bg-[#006a4e] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-3"
+              onClick={() => setActiveTab('chat')}
+              className="px-3 py-2 bg-[#006a4e] text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-sm hover:scale-105 transition-all flex items-center gap-2"
             >
-              <Sparkles className="w-4 h-4 text-[#ffd700]" />
-              Expert AI
+              <Sparkles className="w-3 h-3 text-[#ffd700]" />
+              AI Chat
             </button>
             <div className="relative">
               <button 
@@ -268,45 +482,44 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                {/* Mentor AI Search Interface - THE NAVIGATOR */}
-               <div className="lg:col-span-3 space-y-6">
-                 <div className="bg-[#004d39] rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 text-white relative overflow-hidden shadow-2xl">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
-                      <Sparkles className="w-32 h-32" />
-                    </div>
-                    <div className="relative z-10 space-y-6 md:space-y-8">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-                        <div className="space-y-2">
-                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">
-                            <Bot className="w-3 h-3 text-[#ffd700]" />
-                            RU Intelligence
-                          </div>
-                          <h3 className="text-2xl md:text-4xl font-display font-black leading-tight">Your Campus Navigator</h3>
-                          <p className="text-sm md:text-base text-white/60 font-medium">Ask about BCS, Bank Jobs, Tech in BD, or RU TSC Clubs.</p>
-                        </div>
-                      </div>
+               <div className="lg:col-span-3">
+                 <div className="bg-gradient-to-br from-[#003c2b] to-[#001c13] rounded-[3rem] p-8 md:p-14 text-white relative overflow-hidden shadow-2xl border border-emerald-950/20">
+                   <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+                     <Bot className="w-96 h-96 text-[#ffd700]" />
+                   </div>
+                   <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                   
+                   <div className="relative z-10 max-w-4xl mx-auto space-y-10 text-center">
 
-                      <div className="relative group">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 group-focus-within:text-[#ffd700] transition-colors" />
-                        <input 
-                          type="text"
-                          value={aiSearchQuery}
-                          onChange={(e) => setAiSearchQuery(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              setShowAIChat(true);
-                            }
-                          }}
-                        placeholder="Search for 'How to start BCS prep?' or 'Tech clubs at TSC'..."
-                        className="w-full pl-16 pr-6 md:pr-32 py-5 bg-white/5 border border-white/10 rounded-2xl focus:bg-white/10 focus:border-[#ffd700] outline-none font-bold text-white transition-all placeholder:text-white/30 text-lg shadow-inner"
-                      />
-                      <button 
-                        onClick={() => setShowAIChat(true)}
-                        className="absolute right-3 top-2 bottom-2 px-6 bg-[#ffd700] text-[#004d39] rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all hidden md:block"
-                      >
-                        Ask AI
-                      </button>
-                    </div>
-                  </div>
+                     {/* Gemini/ChatGPT-style Input Dock */}
+                     <div className="relative bg-white/5 border border-white/10 rounded-3xl p-3 md:p-4 focus-within:border-[#ffd700] focus-within:ring-4 focus-within:ring-[#ffd700]/5 transition-all shadow-2xl backdrop-blur-md max-w-sm mx-auto">
+                       <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-xl bg-[#004d39] text-[#ffd700] flex items-center justify-center shrink-0 shadow-md">
+                           <Bot className="w-5 h-5" />
+                         </div>
+                         <input 
+                           type="text"
+                           value={aiSearchQuery}
+                           onChange={(e) => setAiSearchQuery(e.target.value)}
+                           onKeyDown={(e) => {
+                             if (e.key === 'Enter') {
+                               setActiveTab('chat');
+                             }
+                           }}
+                           placeholder="Message Campus Navigator... (e.g. Give me a 4-year BCS roadmap)"
+                           className="w-full bg-transparent outline-none font-extrabold text-white placeholder:text-white/20 text-sm md:text-base"
+                         />
+                         <button 
+                           onClick={() => setActiveTab('chat')}
+                           className="px-6 py-3 bg-[#ffd700] text-[#004d39] rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-2 cursor-pointer"
+                         >
+                           <Sparkles className="w-3.5 h-3.5" />
+                           Ask AI
+                         </button>
+                       </div>
+                     </div>
+
+                   </div>
                  </div>
                </div>
 
@@ -361,7 +574,7 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
                     items={profile.roadmap?.recommendedClubs.slice(0, 3) || []}
                     onAction={() => setActiveTab('clubs')}
                     actionText="View Clubs"
-                    color="purple"
+                    color="red"
                   />
                   <HubCard 
                    title="Knowledge DB" 
@@ -379,7 +592,7 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
                     summary={profile.roadmap?.conductionStrategy}
                     onAction={() => setActiveTab('roadmap')}
                     actionText="Read Roadmap"
-                    color="orange"
+                    color="gold"
                   />
                   <HubCard 
                     title="Platform Manual" 
@@ -433,87 +646,622 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
             <CareerDatabase resources={careerResources} />
           )}
 
-          {activeTab === 'roadmap' && profile.roadmap && (
-            <div className="space-y-6 md:space-y-12">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                {[
-                  { year: 'Year 1', desc: profile.roadmap.year1, color: 'bg-blue-500' },
-                  { year: 'Year 2', desc: profile.roadmap.year2, color: 'bg-emerald-500' },
-                  { year: 'Year 3', desc: profile.roadmap.year3, color: 'bg-[#ffd700]' },
-                  { year: 'Year 4', desc: profile.roadmap.year4, color: 'bg-red-500' },
-                ].map((step, i) => (
-                  <div key={i} className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm relative group overflow-hidden">
-                    <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white font-black mb-4 md:mb-6 shadow-lg", step.color)}>
-                      {i + 1}
-                    </div>
-                    <h4 className="text-xl md:text-2xl font-display font-black text-gray-900 mb-1 md:mb-2">{step.year}</h4>
-                    <p className="text-[13px] md:text-sm text-gray-500 leading-relaxed font-medium">{step.desc}</p>
-                  </div>
-                ))}
-              </div>
-
-               <div className="bg-[#004d39] rounded-3xl p-8 md:p-16 text-white relative overflow-hidden">
-                  <div className="relative z-10 max-w-2xl">
-                    <h4 className="text-xl md:text-3xl font-display font-black italic leading-tight mb-8">
-                      "{profile.roadmap.alumnusPath}"
-                    </h4>
-                    <div className="flex flex-wrap gap-2 mb-10">
-                      {profile.roadmap.keySkills.map(skill => (
-                        <span key={skill} className="px-4 py-2 bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-wider border border-white/10 text-[#ffd700]">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/10">
-                      {profile.roadmap.conductionStrategy && (
-                        <div className="space-y-2">
-                          <p className="text-[10px] font-black text-[#ffd700] uppercase tracking-[0.2em]">How to Conduct (via Clubs)</p>
-                          <p className="text-sm font-medium leading-relaxed text-white/80 italic">{profile.roadmap.conductionStrategy}</p>
+          {activeTab === 'roadmap' && (
+            <div className="space-y-8 md:space-y-12">
+              {profile.roadmap ? (
+                <div className="space-y-6 md:space-y-12 animate-fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                    {[
+                      { year: 'Year 1', desc: profile.roadmap.year1, color: 'bg-blue-500' },
+                      { year: 'Year 2', desc: profile.roadmap.year2, color: 'bg-emerald-500' },
+                      { year: 'Year 3', desc: profile.roadmap.year3, color: 'bg-[#ffd700]' },
+                      { year: 'Year 4', desc: profile.roadmap.year4, color: 'bg-red-500' },
+                    ].map((step, i) => (
+                      <div key={i} className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm relative group overflow-hidden">
+                        <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white font-black mb-4 md:mb-6 shadow-lg", step.color)}>
+                          {i + 1}
                         </div>
-                      )}
-                      {profile.roadmap.onlineGuidelineReference && (
-                        <div className="space-y-2">
-                          <p className="text-[10px] font-black text-[#ffd700] uppercase tracking-[0.2em]">Target Guidelines</p>
-                          <p className="text-sm font-medium leading-relaxed text-white/80 italic">{profile.roadmap.onlineGuidelineReference}</p>
-                        </div>
-                      )}
-                    </div>
+                        <h4 className="text-xl md:text-2xl font-display font-black text-gray-900 mb-1 md:mb-2">{step.year}</h4>
+                        <p className="text-[13px] md:text-sm text-gray-500 leading-relaxed font-medium">{step.desc}</p>
+                      </div>
+                    ))}
                   </div>
-               </div>
+
+                   <div className="bg-[#004d39] rounded-3xl p-8 md:p-16 text-white relative overflow-hidden">
+                      <div className="relative z-10 max-w-2xl">
+                        <h4 className="text-xl md:text-3xl font-display font-black italic leading-tight mb-8">
+                          "{profile.roadmap.alumnusPath}"
+                        </h4>
+                        <div className="flex flex-wrap gap-2 mb-10">
+                          {profile.roadmap.keySkills.map(skill => (
+                            <span key={skill} className="px-4 py-2 bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-wider border border-white/10 text-[#ffd700]">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/10">
+                          {profile.roadmap.conductionStrategy && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-black text-[#ffd700] uppercase tracking-[0.2em]">How to Conduct (via Clubs)</p>
+                              <p className="text-sm font-medium leading-relaxed text-white/80 italic">{profile.roadmap.conductionStrategy}</p>
+                            </div>
+                          )}
+                          {profile.roadmap.onlineGuidelineReference && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-black text-[#ffd700] uppercase tracking-[0.2em]">Target Guidelines</p>
+                              <p className="text-sm font-medium leading-relaxed text-white/80 italic">{profile.roadmap.onlineGuidelineReference}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                   </div>
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-100 rounded-3xl p-8 md:p-12 shadow-sm text-center max-w-sm mx-auto space-y-6">
+                  <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e] mx-auto shadow-sm">
+                    <Rocket className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-display font-black text-2xl text-gray-900">Your AI Career Roadmap is Unforged</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed max-w-md mx-auto">
+                      Define your department and career coordinates inside your Academic DNA Profile to compile an aligned 4-year success path instantly using Gemini AI.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('profile')}
+                    className="px-6 py-3 bg-[#006a4e] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#004d39] transition-all cursor-pointer shadow-lg shadow-[#006a4e]/10 inline-flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4" /> Go to DNA Profile
+                  </button>
+                </div>
+              )}
+
+              {/* Comprehensive CURATED resources directory */}
+              <CareerResourcesDirectory />
             </div>
           )}
 
-          {activeTab === 'clubs' && (
-            <div className="space-y-8 md:space-y-12">
-              <div className="bg-emerald-50 rounded-3xl p-8 md:p-12 text-[#006a4e] border border-emerald-100">
-                  <h3 className="text-2xl md:text-3xl font-display font-black tracking-tight mb-4">Matches linked to your DNA.</h3>
-                  <p className="text-base md:text-xl font-medium opacity-80 leading-relaxed">
-                    Societies chosen based on your department and goals.
-                  </p>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {profile.roadmap?.recommendedClubs.map((club, i) => (
-                  <div key={i} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm transition-all group">
-                    <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-[#006a4e] mb-6 group-hover:bg-[#006a4e] group-hover:text-white transition-all">
-                      <Target className="w-6 h-6" />
+          {activeTab === 'clubs' && (
+            selectedClubId ? (
+              <ClubDetailView
+                clubId={selectedClubId}
+                onBack={() => setSelectedClubId(null)}
+                events={events}
+                profile={profile}
+              />
+            ) : (
+              <div className="space-y-12">
+                {/* Recommended Top DNA Matches */}
+                {profile.roadmap?.recommendedClubs && profile.roadmap.recommendedClubs.length > 0 && (
+                  <div className="space-y-6">
+                    <div className="bg-emerald-50 rounded-3xl p-8 md:p-12 text-[#006a4e] border border-emerald-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-5 h-5 text-[#ffd700]" />
+                          <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70">AI DNA Alignment</span>
+                        </div>
+                        <h3 className="text-2xl md:text-3xl font-display font-black tracking-tight mb-2">Matches Linked to Your DNA</h3>
+                        <p className="text-sm md:text-base font-medium opacity-80 leading-relaxed max-w-2xl">
+                          These societies match your department, personality type, and ultimate career roadmap. Click on any card to view detailed organization plans.
+                        </p>
+                      </div>
                     </div>
-                    <h4 className="text-xl font-display font-black text-gray-900 mb-2">{club}</h4>
-                    <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">
-                      Recommended for your {profile.roadmap?.keySkills[i % profile.roadmap.keySkills.length]} growth.
-                    </p>
-                    <button className="w-full py-4 bg-gray-50 text-gray-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#006a4e] hover:text-white transition-all">
-                      View Info
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {profile.roadmap?.recommendedClubs.map((clubName, i) => {
+                        const matchingClub = CLUBS_DATA.find(c => clubName.toLowerCase().includes(c.id.toLowerCase()) || clubName.toLowerCase().includes(c.name.toLowerCase()));
+                        return (
+                          <div
+                            key={i}
+                            onClick={() => matchingClub && setSelectedClubId(matchingClub.id)}
+                            className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 duration-300 group cursor-pointer border-t-4 border-t-emerald-600 hover:border-t-emerald-800"
+                          >
+                            <div className="flex justify-between items-start mb-6">
+                              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e] group-hover:bg-[#006a4e] group-hover:text-[#ffd700] transition-colors duration-300">
+                                <Target className="w-6 h-6" />
+                              </div>
+                              <span className="text-[9px] uppercase font-black tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                                View Profile
+                              </span>
+                            </div>
+                            <h4 className="text-lg font-display font-black text-gray-900 mb-1 group-hover:text-[#006a4e] transition-colors">
+                              {clubName}
+                            </h4>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+                              Recommended Match
+                            </p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (matchingClub) setSelectedClubId(matchingClub.id);
+                              }}
+                              className="mt-4 flex items-center justify-center gap-2 w-full py-3.5 bg-emerald-50 hover:bg-[#006a4e] text-[#006a4e] hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300"
+                            >
+                              Analyze Detailed Fit <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* All 35 Clubs Portal Listing & Direct Feeds */}
+                <div className="space-y-8">
+                  <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl md:text-3xl font-display font-black text-gray-900 tracking-tight">Rajshahi University Club Ecosystem</h3>
+                      <p className="text-gray-400 font-medium text-sm mt-1 italic">Click on club names to view their full profiles, DNA compatibility, and real-time announcement board.</p>
+                    </div>
+                  </div>
+
+                  {/* Search & Category Filter */}
+                  <div className="flex flex-col md:flex-row gap-4 justify-between bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Search official RU Clubs..."
+                        value={clubSearchQuery}
+                        onChange={(e) => setClubSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#006a4e] outline-none text-sm font-semibold"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {['All', 'Career & Business', 'Science & Academic', 'Culture & Arts', 'Social & Service', 'Media & Leisure'].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setSelectedClubCategory(cat)}
+                          className={cn(
+                            "px-4 py-2 text-xs font-bold rounded-xl transition-all border",
+                            selectedClubCategory === cat
+                              ? "bg-[#006a4e] text-white border-[#006a4e]"
+                              : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                          )}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {CLUBS_DATA.filter(c => {
+                      const matchesSearch = c.name.toLowerCase().includes(clubSearchQuery.toLowerCase()) || c.id.toLowerCase().includes(clubSearchQuery.toLowerCase());
+                      const matchesCat = selectedClubCategory === 'All' || c.category === selectedClubCategory;
+                      return matchesSearch && matchesCat;
+                    }).map((club) => {
+                      const clubEvents = events.filter(e => (e as any).clubId === club.id).map(e => ({
+                        ...e,
+                        clubPostType: 'Event',
+                        dateTime: e.dateTime,
+                        venue: e.venue
+                      }));
+                      const clubFeedFiltered = clubFeedItems.filter(f => f.clubId === club.id);
+                      const feeds = [...clubEvents, ...clubFeedFiltered].sort((a, b) => {
+                        const dateA = a.createdAt ? ((a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt)) : new Date();
+                        const dateB = b.createdAt ? ((b.createdAt as any).toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt)) : new Date();
+                        return dateB.getTime() - dateA.getTime();
+                      });
+                      const isExpanded = expandedClubId === club.id;
+
+                      return (
+                        <div
+                          key={club.id}
+                          onClick={() => setSelectedClubId(club.id)}
+                          className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group cursor-pointer"
+                        >
+                          <div className="absolute top-0 left-0 w-2 h-full bg-[#006a4e] opacity-80" />
+                          <div>
+                            <div className="flex items-center justify-between gap-4 mb-4">
+                              <span className="px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-lg text-xs font-mono font-black text-[#006a4e]">
+                                {club.id}
+                              </span>
+                              <span className="text-[10px] font-black text-gray-400 tracking-widest uppercase">{club.category}</span>
+                            </div>
+
+                            <h4 className="mb-2">
+                              <button
+                                onClick={() => setSelectedClubId(club.id)}
+                                className="inline-flex items-center gap-1.5 text-[#006a4e] hover:text-[#004d39] font-display font-black text-lg md:text-xl hover:underline group-hover:translate-x-1 transition-all duration-300 text-left"
+                              >
+                                {club.name}
+                                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#006a4e] transition-colors" />
+                              </button>
+                            </h4>
+
+                            <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">
+                              {club.description}
+                            </p>
+
+                            <div className="flex gap-3 mb-4">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClubId(club.id);
+                                }}
+                                className="flex-1 py-3 bg-emerald-50 hover:bg-[#006a4e] text-[#006a4e] hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm"
+                              >
+                                View Detailed Profile
+                              </button>
+                            </div>
+
+                            {/* Club Feed Section for Student */}
+                            <div className="border-t border-gray-50 pt-5 mt-4">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedClubId(isExpanded ? null : club.id);
+                                }}
+                                className="flex items-center justify-between w-full text-[10px] font-black uppercase tracking-widest text-[#006a4e] hover:text-[#004d39]"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span className={cn("w-1.5 h-1.5 rounded-full", feeds.length > 0 ? "bg-amber-500 animate-pulse" : "bg-gray-300")} />
+                                  Live Announcements ({feeds.length})
+                                </span>
+                                <span>{isExpanded ? "Hide Feed" : "View Feed"}</span>
+                              </button>
+
+                              {isExpanded && (
+                                <div className="mt-4 space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar" onClick={(e) => e.stopPropagation()}>
+                                  {feeds.length > 0 ? (
+                                    feeds.map((item) => (
+                                      <div key={item.id} className="bg-gray-50 p-4 border border-gray-100 rounded-2xl flex flex-col relative">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className={cn(
+                                            "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border",
+                                            (item as any).clubPostType === 'Event' ? "bg-amber-50 text-amber-700 border-amber-100" :
+                                            (item as any).clubPostType === 'Achievement' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                                            (item as any).clubPostType === 'History' ? "bg-indigo-50 text-indigo-700 border-indigo-100" :
+                                            (item as any).clubPostType === 'Ceremony' ? "bg-purple-50 text-purple-700 border-purple-100" :
+                                            (item as any).clubPostType === 'Update' ? "bg-[#006a4e]/5 text-[#006a4e] border-[#006a4e]/15" :
+                                            "bg-blue-50 text-blue-700 border-blue-100"
+                                          )}>
+                                            {(item as any).clubPostType || 'News'}
+                                          </span>
+                                          <span className="text-[9px] font-semibold text-gray-400">
+                                            {item.createdAt ? new Date(item.createdAt.toDate ? item.createdAt.toDate() : item.createdAt).toLocaleDateString() : 'Just now'}
+                                          </span>
+                                        </div>
+                                        <h5 className="font-extrabold text-sm text-gray-900 mb-1">{item.title.replace(`[${club.id}] `, '')}</h5>
+                                        <p className="text-xs text-gray-600 leading-relaxed font-semibold italic">"{item.description}"</p>
+
+                                        {((item as any).clubPostType === 'Event' || item.venue || item.dateTime) && (
+                                          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-gray-500 border-t border-gray-100/50 pt-2">
+                                            {item.venue && <span className="flex items-center gap-1">📍 {item.venue}</span>}
+                                            {item.dateTime && <span className="flex items-center gap-1">🕒 {item.dateTime}</span>}
+                                          </div>
+                                        )}
+
+                                        {item.contact?.joinLink && (
+                                          <a
+                                            href={item.contact.joinLink.startsWith('http') ? item.contact.joinLink : `https://${item.contact.joinLink}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-3 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#006a4e] hover:underline"
+                                          >
+                                            Register / Join Now <ExternalLink className="w-2.5 h-2.5" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="py-6 text-center text-xs text-gray-300 italic">
+                                      No active announcements for this club.
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+
+          {activeTab === 'insights' && (
+            <div className="space-y-8 animate-fade-in">
+              {/* Main Hub Header Card */}
+              <div className="relative overflow-hidden bg-white rounded-3xl p-6 md:p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#006a4e]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+                <div className="relative min-w-0 flex-1">
+                  <h3 className="text-2xl md:text-3xl font-display font-black text-gray-900 tracking-tight flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-[#ffd700] fill-current" />
+                    RU Campus Insights Hub
+                  </h3>
+                  <p className="text-gray-400 font-medium italic text-xs md:text-sm mt-1">
+                    Authentic guides, department hacks, research hints, and career suggestions curated by authorized authors.
+                  </p>
+                  
+                  {/* Sub-tab Switches */}
+                  <div className="flex items-center gap-2 mt-6 bg-gray-50 p-1.5 rounded-2xl w-fit border border-gray-100 flex-wrap">
+                    <button
+                      onClick={() => setInsightsSubTab('articles')}
+                      className={cn(
+                        "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
+                        insightsSubTab === 'articles'
+                          ? "bg-[#006a4e] text-white shadow-sm"
+                          : "text-gray-400 hover:text-gray-900"
+                      )}
+                    >
+                      Articles & Guides
+                    </button>
+                    <button
+                      onClick={() => setInsightsSubTab('media')}
+                      className={cn(
+                        "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
+                        insightsSubTab === 'media'
+                          ? "bg-[#006a4e] text-white shadow-sm"
+                          : "text-gray-400 hover:text-gray-900"
+                      )}
+                    >
+                      Multimedia Vault ({mediaResources.length})
+                    </button>
+                    <button
+                      onClick={() => setInsightsSubTab('synthesis')}
+                      className={cn(
+                        "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5",
+                        insightsSubTab === 'synthesis'
+                          ? "bg-[#006a4e] text-white shadow-sm"
+                          : "text-gray-400 hover:text-gray-900"
+                      )}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#ffd700]" />
+                      AI Synthesis Center
                     </button>
                   </div>
-                ))}
+                </div>
+
+                {insightsSubTab !== 'synthesis' && (
+                  <div className="relative w-full md:w-80 shrink-0">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    {insightsSubTab === 'articles' ? (
+                      <input
+                        type="text"
+                        value={articleSearchQuery}
+                        onChange={(e) => setArticleSearchQuery(e.target.value)}
+                        placeholder="Search titles, authors, hacks..."
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold text-gray-900 focus:bg-white focus:border-[#006a4e] transition-all shadow-inner"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={mediaSearchQuery}
+                        onChange={(e) => setMediaSearchQuery(e.target.value)}
+                        placeholder="Search files, channels, resource links..."
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold text-gray-900 focus:bg-white focus:border-[#006a4e] transition-all shadow-inner"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
+
+              {insightsSubTab === 'articles' && (
+                <>
+                  {/* Category Pills */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {['All', 'Career Suggestions', 'Research & Publications', 'Department Hacks', 'Skill Development Tips', 'Campus Resources', 'General Guidance'].map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedArticleCategory(cat)}
+                        className={cn(
+                          "px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border transition-all cursor-pointer",
+                          selectedArticleCategory === cat
+                            ? "bg-[#006a4e] text-white border-[#006a4e] shadow-md shadow-[#006a4e]/10"
+                            : "bg-white text-gray-400 border-gray-100 hover:border-[#006a4e]/20 hover:text-gray-900"
+                        )}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Articles Feed */}
+                  {articles.filter(art => {
+                    const matchesCat = selectedArticleCategory === 'All' || art.category === selectedArticleCategory;
+                    const matchesSearch = art.title.toLowerCase().includes(articleSearchQuery.toLowerCase()) || 
+                                          art.content.toLowerCase().includes(articleSearchQuery.toLowerCase()) || 
+                                          art.authorName.toLowerCase().includes(articleSearchQuery.toLowerCase());
+                    return matchesCat && matchesSearch;
+                  }).length === 0 ? (
+                    <div className="bg-white rounded-3xl p-16 text-center border border-gray-100 space-y-3">
+                      <p className="text-gray-400 font-bold">No insights found.</p>
+                      <p className="text-xs text-gray-300">Try adjusting your filters or search terms.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {articles.filter(art => {
+                        const matchesCat = selectedArticleCategory === 'All' || art.category === selectedArticleCategory;
+                        const matchesSearch = art.title.toLowerCase().includes(articleSearchQuery.toLowerCase()) || 
+                                              art.content.toLowerCase().includes(articleSearchQuery.toLowerCase()) || 
+                                              art.authorName.toLowerCase().includes(articleSearchQuery.toLowerCase());
+                        return matchesCat && matchesSearch;
+                      }).map((art) => (
+                        <motion.article
+                          key={art.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 hover:border-[#006a4e]/10 transition-all shadow-sm relative group flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="px-3 py-1 bg-emerald-50 text-[#006a4e] text-[9px] font-black uppercase tracking-wider rounded-full border border-emerald-100">
+                                {art.category}
+                              </span>
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                {art.readingTime}
+                              </span>
+                            </div>
+
+                            <h4 className="text-lg md:text-xl font-display font-black text-gray-900 mt-4 leading-snug group-hover:text-[#006a4e] transition-colors">
+                              {art.title}
+                            </h4>
+
+                            <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-medium mt-3 whitespace-pre-line line-clamp-4 italic">
+                              "{art.content}"
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 mt-6 border-t pt-4">
+                            <div className="w-8 h-8 bg-emerald-50 text-[#006a4e] rounded-lg flex items-center justify-center font-black text-xs border border-emerald-100">
+                              {art.authorName.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-xs font-black text-gray-800">{art.authorName}</p>
+                              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Authorized Platform Author</p>
+                            </div>
+                          </div>
+                        </motion.article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {insightsSubTab === 'media' && (
+                <div className="space-y-6">
+                  {/* Category Pills for Media types */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {['All', 'pdf', 'word', 'video', 'audio', 'website'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedMediaType(type)}
+                        className={cn(
+                          "px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border transition-all cursor-pointer",
+                          selectedMediaType === type
+                            ? "bg-[#006a4e] text-white border-[#006a4e] shadow-md shadow-[#006a4e]/10"
+                            : "bg-white text-gray-400 border-gray-100 hover:border-[#006a4e]/20 hover:text-gray-900"
+                        )}
+                      >
+                        {type === 'All' ? 'All Formats' : type.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Media Grid */}
+                  {mediaResources.filter(res => {
+                    const matchesType = selectedMediaType === 'All' || res.type === selectedMediaType;
+                    const matchesSearch = res.title.toLowerCase().includes(mediaSearchQuery.toLowerCase()) || 
+                                          res.description.toLowerCase().includes(mediaSearchQuery.toLowerCase()) || 
+                                          res.authorName.toLowerCase().includes(mediaSearchQuery.toLowerCase());
+                    return matchesType && matchesSearch;
+                  }).length === 0 ? (
+                    <div className="bg-white rounded-3xl p-16 text-center border border-gray-100 space-y-3">
+                      <p className="text-gray-400 font-bold">No resources found in the Vault.</p>
+                      <p className="text-xs text-gray-300">Try adjusting your filters or search terms.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {mediaResources.filter(res => {
+                        const matchesType = selectedMediaType === 'All' || res.type === selectedMediaType;
+                        const matchesSearch = res.title.toLowerCase().includes(mediaSearchQuery.toLowerCase()) || 
+                                              res.description.toLowerCase().includes(mediaSearchQuery.toLowerCase()) || 
+                                              res.authorName.toLowerCase().includes(mediaSearchQuery.toLowerCase());
+                        return matchesType && matchesSearch;
+                      }).map((res) => {
+                        // Icon mapping
+                        const getIcon = () => {
+                          switch(res.type) {
+                            case 'pdf': return <File className="w-5 h-5 text-rose-500" />;
+                            case 'word': return <FileUp className="w-5 h-5 text-blue-500" />;
+                            case 'video': return <Video className="w-5 h-5 text-purple-500" />;
+                            case 'audio': return <Music className="w-5 h-5 text-amber-500" />;
+                            case 'website': return <Globe className="w-5 h-5 text-emerald-500" />;
+                            default: return <File className="w-5 h-5 text-gray-500" />;
+                          }
+                        };
+
+                        return (
+                          <motion.div
+                            key={res.id}
+                            layout
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-[#006a4e]/10 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2 mb-4">
+                                <span className={cn(
+                                  "px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border flex items-center gap-1.5",
+                                  res.type === 'pdf' ? "bg-rose-50 text-rose-700 border-rose-100" :
+                                  res.type === 'word' ? "bg-blue-50 text-blue-700 border-blue-100" :
+                                  res.type === 'video' ? "bg-purple-50 text-purple-700 border-purple-100" :
+                                  res.type === 'audio' ? "bg-amber-50 text-amber-700 border-amber-100" :
+                                  "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                )}>
+                                  {getIcon()}
+                                  {res.type}
+                                </span>
+                                <span className="text-[9px] font-bold text-gray-400">
+                                  {res.createdAt ? new Date(res.createdAt.toDate ? res.createdAt.toDate() : res.createdAt).toLocaleDateString() : 'Recent'}
+                                </span>
+                              </div>
+
+                              <h4 className="text-base font-extrabold text-gray-900 tracking-tight leading-snug line-clamp-2">
+                                {res.title}
+                              </h4>
+
+                              <p className="text-xs text-gray-500 leading-relaxed font-semibold italic mt-2 line-clamp-3">
+                                "{res.description}"
+                              </p>
+                            </div>
+
+                            <div className="mt-6 border-t border-gray-50 pt-4 flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 flex items-center justify-center font-black text-[10px] shrink-0">
+                                  {res.authorName ? res.authorName.charAt(0) : 'A'}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-black text-gray-800 truncate">{res.authorName || 'Author'}</p>
+                                </div>
+                              </div>
+
+                              <a
+                                href={res.url.startsWith('http') ? res.url : `https://${res.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#006a4e]/5 text-[#006a4e] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#006a4e] hover:text-white transition-all shrink-0 cursor-pointer"
+                              >
+                                Access <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {insightsSubTab === 'synthesis' && (
+                <AICampusSynthesizer 
+                  profile={profile}
+                  articles={articles}
+                  mediaResources={mediaResources}
+                  events={events}
+                  clubFeedItems={clubFeedItems}
+                />
+              )}
             </div>
           )}
 
           {activeTab === 'profile' && (
-            <DNAStudio profile={profile} />
+            <DNAStudio profile={profile} events={events} />
+          )}
+
+          {activeTab === 'calendar' && (
+            <EventCalendar events={events} onFeedbackClick={setSelectedEventForFeedback} />
+          )}
+
+          {activeTab === 'sandbox' && (
+            <RecommendationSandbox profile={profile} />
           )}
 
           {activeTab === 'settings' && (
@@ -526,14 +1274,22 @@ export default function StudentDashboard({ profile }: { profile: UserProfile }) 
         </div>
 
         <AnimatePresence>
-          {showAIChat && (
+          {activeTab === 'chat' && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100]"
+              className="fixed inset-0 z-[100] bg-[#131314]"
             >
-              <MentorChat initialMessage={aiSearchQuery} onClose={() => setShowAIChat(false)} />
+              <MentorChat 
+                initialMessage={aiSearchQuery} 
+                onClose={() => setActiveTab('overview')} 
+                articles={articles}
+                mediaResources={mediaResources}
+                events={events}
+                clubFeedItems={clubFeedItems}
+                profile={profile}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -640,7 +1396,8 @@ function PlatformManual() {
   );
 }
 
-function DNAStudio({ profile }: { profile: UserProfile }) {
+function DNAStudio({ profile, events }: { profile: UserProfile; events: ClubEvent[] }) {
+  const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [dna, setDna] = useState(profile.studentDNA || { 
     dept: '', 
     year: '', 
@@ -661,6 +1418,17 @@ function DNAStudio({ profile }: { profile: UserProfile }) {
     vision10Years: ''
   });
   const [saving, setSaving] = useState(false);
+  const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
+  const [generationStep, setGenerationStep] = useState(0);
+
+  useEffect(() => {
+    if (profile.studentDNA) {
+      setDna(profile.studentDNA);
+    }
+    if (profile.displayName) {
+      setDisplayName(profile.displayName);
+    }
+  }, [profile.studentDNA, profile.displayName]);
 
   const deptOptions = [
     'Computer Science & Engineering', 'Information & Communication Engineering', 
@@ -687,13 +1455,15 @@ function DNAStudio({ profile }: { profile: UserProfile }) {
   const obstacleOptions = ['Financial Constraints', 'Lack of Proper Guidance', 'Skills Gap (Practical vs Academic)', 'Limited Resources (Laptop/Internet)', 'Mental Health / Motivation'];
   const visionOptions = ['Senior Industry Expert', 'High-ranking Govt Official', 'Successful Business Owner', 'Academician / Researcher'];
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveOnly = async () => {
     setSaving(true);
     try {
       const docRef = doc(db, 'users', profile.uid);
-      await updateDoc(docRef, { studentDNA: dna, updatedAt: serverTimestamp() });
-      window.location.reload(); 
+      await updateDoc(docRef, { 
+        displayName: displayName,
+        studentDNA: dna, 
+        updatedAt: serverTimestamp() 
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'users');
     } finally {
@@ -701,233 +1471,556 @@ function DNAStudio({ profile }: { profile: UserProfile }) {
     }
   };
 
-  return (
-    <div className="max-w-4xl">
-      <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-12 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-8 md:mb-16">
-          <div className="space-y-1">
-            <h3 className="text-2xl md:text-4xl font-display font-black text-gray-900 tracking-tight">DNA Studio.</h3>
-            <p className="text-xs md:text-sm text-gray-400 font-medium italic">Update parameters to recalibrate synthesis.</p>
+  const handleDeepAISynthesis = async () => {
+    setGeneratingRoadmap(true);
+    setGenerationStep(1);
+    
+    const interval = setInterval(() => {
+      setGenerationStep(prev => prev < 4 ? prev + 1 : prev);
+    }, 1800);
+
+    try {
+      const docRef = doc(db, 'users', profile.uid);
+      // Run Gemini API call
+      const generated = await generateRoadmap(dna);
+      if (generated) {
+        await updateDoc(docRef, { 
+          displayName: displayName,
+          studentDNA: dna, 
+          roadmap: generated, 
+          updatedAt: serverTimestamp() 
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      clearInterval(interval);
+      setGeneratingRoadmap(false);
+      setGenerationStep(0);
+      window.dispatchEvent(new CustomEvent('switchTab', { detail: 'roadmap' }));
+    }
+  };
+
+  // --- REAL-TIME HEURISTIC RECOMMENDATION CORE ---
+  const getHeuristicFeedback = () => {
+    // 1. Temporal Stage Milestones Focus
+    let ageGuidance = "Select your department and year to calibrate instant pathway insights.";
+    if (dna.year === '1st Year') {
+      ageGuidance = "Focus on establishing academic foundations (GPA), adjustments with student autonomy, and discovering general-purpose clubs (like RUCC or RUSC) as general members.";
+    } else if (dna.year === '2nd Year') {
+      ageGuidance = "Aim at basic skillset creation (coding, basic debates, slide creation). Step up into working execution-level sub-committees of campus clubs.";
+    } else if (dna.year === '3rd Year') {
+      ageGuidance = "Pivot towards local workspace preparedness: search actively for internships, design robust LinkedIn networks, engage in inter-varsity contests, or begin core BCS preparatory sets.";
+    } else if (dna.year === '4th Year') {
+      ageGuidance = "Complete graduation thesis/dissertation milestones. Unleash intensive job applications and profile promotions. Engage in physical mock trials and recruitment challenges.";
+    } else if (dna.year === 'Masters' || dna.year === 'Alumnus') {
+      ageGuidance = "Focus on corporate transitions, international MS fellowships or graduate applications, major national recruitment schemes, and mentorship roles inside the TSC.";
+    }
+
+    // 2. Club Match Algorithm
+    const clubScores = CLUBS_DATA.map(club => {
+      let score = 0.5; // Base score
+      const cat = club.category;
+      const deptLow = (dna.dept || '').toLowerCase();
+      const goalLow = (dna.goals || '').toLowerCase();
+
+      // Dept category alignments
+      if (deptLow.includes('computer') || deptLow.includes('information') || deptLow.includes('electrical') || deptLow.includes('engineering')) {
+        if (cat === 'Science & Academic') score += 0.25;
+        if (club.id === 'RUCC' || club.id === 'RUSC' || club.id === 'RURS') score += 0.15;
+      }
+      if (deptLow.includes('chemistry') || deptLow.includes('applied') || deptLow.includes('physics') || deptLow.includes('math') || deptLow.includes('statistics')) {
+        if (cat === 'Science & Academic') score += 0.2;
+        if (club.id === 'RUSC' || club.id === 'RURS' || club.id === 'RUHSC') score += 0.1;
+      }
+      if (deptLow.includes('accounting') || deptLow.includes('management') || deptLow.includes('marketing') || deptLow.includes('finance') || deptLow.includes('business') || deptLow.includes('economics')) {
+        if (cat === 'Career & Business') score += 0.3;
+        if (club.id === 'RUBC' || club.id === 'RUCC') score += 0.15;
+      }
+      if (deptLow.includes('law') || deptLow.includes('political') || deptLow.includes('public') || deptLow.includes('english') || deptLow.includes('sociology')) {
+        if (club.id === 'RUMUNA' || club.id === 'RURF') score += 0.25;
+        if (cat === 'Social & Service') score += 0.1;
+      }
+
+      // Goals parameters alignments
+      if (goalLow.includes('software') || goalLow.includes('engineer') || goalLow.includes('tech') || goalLow.includes('coding')) {
+        if (club.id === 'RUCC') score += 0.1;
+        if (club.id === 'RUSC') score += 0.05;
+      }
+      if (goalLow.includes('business') || goalLow.includes('entrepreneur') || goalLow.includes('bank') || goalLow.includes('startup')) {
+        if (club.id === 'RUBC' || club.id === 'RUCC') score += 0.15;
+      }
+      if (goalLow.includes('bcs') || goalLow.includes('govt') || goalLow.includes('government') || goalLow.includes('civil')) {
+        if (club.id === 'RUEC' || club.id === 'RUMUNA') score += 0.15;
+      }
+      if (goalLow.includes('higher') || goalLow.includes('study') || goalLow.includes('masters') || goalLow.includes('academic') || goalLow.includes('phd')) {
+        if (club.id === 'RUHSC' || club.id === 'RURS') score += 0.15;
+      }
+
+      // Motivation & involving metrics
+      if (dna.motivation === 'Financial Stability' && cat === 'Career & Business') score += 0.05;
+      if (dna.motivation === 'Social Impact' && cat === 'Social & Service') score += 0.1;
+
+      return {
+        ...club,
+        score: Math.min(0.98, score)
+      };
+    }).sort((a, b) => b.score - a.score);
+
+    const recommendedClubsHeuristic = clubScores.slice(0, 3);
+
+    // 3. Active Event Alignments Matcher
+    const eventScores = (events || []).map(event => {
+      let score = 0.5;
+      const titleLow = event.title.toLowerCase();
+      const descLow = (event.description || '').toLowerCase();
+      const orgLow = (event.adminName || '').toLowerCase();
+      const deptLow = (dna.dept || '').toLowerCase();
+      const goalLow = (dna.goals || '').toLowerCase();
+
+      // Check overlaps with recommended club abbreviation ids
+      recommendedClubsHeuristic.forEach(club => {
+        if (orgLow.includes(club.id.toLowerCase()) || titleLow.includes(club.id.toLowerCase())) {
+          score += 0.25;
+        }
+      });
+
+      // Semantic matching keywords
+      if (deptLow.includes('computer') || deptLow.includes('information') || goalLow.includes('software') || goalLow.includes('engineering') || goalLow.includes('developer')) {
+        if (titleLow.includes('code') || titleLow.includes('comput') || titleLow.includes('tech') || titleLow.includes('hack') || titleLow.includes('program') || descLow.includes('software')) {
+          score += 0.25;
+        }
+      }
+      if (deptLow.includes('accounting') || deptLow.includes('business') || deptLow.includes('economics') || goalLow.includes('business') || goalLow.includes('entrepreneur')) {
+        if (titleLow.includes('case') || titleLow.includes('business') || titleLow.includes('market') || titleLow.includes('summit') || descLow.includes('finance')) {
+          score += 0.25;
+        }
+      }
+      if (goalLow.includes('bcs') || goalLow.includes('govt') || goalLow.includes('civil') || goalLow.includes('government')) {
+        if (titleLow.includes('bcs') || titleLow.includes('guidelines') || titleLow.includes('civil') || titleLow.includes('exam')) {
+          score += 0.3;
+        }
+      }
+      if (goalLow.includes('higher') || goalLow.includes('study') || goalLow.includes('research') || goalLow.includes('scholarship')) {
+        if (titleLow.includes('ielts') || titleLow.includes('research') || titleLow.includes('journal') || titleLow.includes('higher') || titleLow.includes('gre')) {
+          score += 0.3;
+        }
+      }
+
+      return {
+        ...event,
+        score: Math.min(0.97, score)
+      };
+    }).sort((a, b) => b.score - a.score);
+
+    const recommendedEventsHeuristic = eventScores.slice(0, 2);
+
+    return {
+      ageGuidance,
+      recommendedClubs: recommendedClubsHeuristic,
+      recommendedEvents: recommendedEventsHeuristic
+    };
+  };
+
+  const feedback = getHeuristicFeedback();
+
+  // Loader components shown while executing deep synthesis
+  if (generatingRoadmap) {
+    return (
+      <div className="max-w-4xl mx-auto py-16 px-6 text-center bg-white rounded-[3rem] border border-gray-100 shadow-sm flex flex-col items-center justify-center min-h-[500px]">
+        <div className="relative mb-10">
+          <div className="w-24 h-24 rounded-full border-4 border-emerald-50 border-t-emerald-600 animate-spin flex items-center justify-center" />
+          <div className="absolute inset-0 flex items-center justify-center text-emerald-600">
+            <Sparkles className="w-8 h-8 animate-pulse" />
           </div>
         </div>
+        <div className="space-y-4 max-w-lg">
+          <h4 className="text-3xl font-display font-black text-gray-900 tracking-tight">Synthetically Calibrating...</h4>
+          <p className="text-sm font-bold text-[#006a4e] uppercase tracking-widest animate-pulse">
+            {generationStep === 1 && "Aligning Academic DNA parameters..."}
+            {generationStep === 2 && "Mapping Rajshahi University Club coordinates..."}
+            {generationStep === 3 && "Synthesizing deep localized 4-year success milestones..."}
+            {generationStep === 4 && "Connecting physical and digital alumni knowledge resources..."}
+          </p>
+          <p className="text-xs text-gray-400 italic">This will update your dashboard reactively. Seamless transition occurs automatically.</p>
+        </div>
+      </div>
+    );
+  }
 
-        <form onSubmit={handleSave} className="space-y-8 md:space-y-12">
-          {/* Section 1: Academic & Career Identity */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black text-[#006a4e] uppercase tracking-[0.2em] border-b border-gray-100 pb-2">Academic & Career Identity</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  return (
+    <div className="max-w-7xl mx-auto space-y-10">
+      {/* Top Banner introducing Instant Feedback */}
+      <div className="bg-[#004d39] rounded-[3.5rem] p-8 md:p-14 text-white relative overflow-hidden shadow-sm">
+        <div className="absolute top-0 right-0 p-10 opacity-10">
+          <Cpu className="w-56 h-56" />
+        </div>
+        <div className="relative z-10 max-w-4xl space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ffd700] text-[#004d39] rounded-full text-[9px] font-black uppercase tracking-[0.25em]">
+            Interactive Synthesis Studio
+          </div>
+          <h3 className="text-3xl md:text-5xl font-display font-black leading-tight tracking-tighter">Academic DNA Calibration</h3>
+          <p className="text-sm md:text-base text-white/80 max-w-2xl font-medium leading-relaxed italic">
+            "Adjust your academic goals, motivation indices, and department attributes below. Your club alignments, yearly path constraints, and event nodes will calibrate in real-time."
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+        {/* Left Column (Core Parameters Form) */}
+        <div className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 space-y-8">
+          <div className="border-b border-gray-100 pb-4">
+            <h4 className="text-xl font-display font-black text-gray-900">1. Parameter Tuning Node</h4>
+            <p className="text-xs text-gray-400 font-medium italic">Adjust the inputs to recalculate recommendations instantly.</p>
+          </div>
+
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveOnly(); }} className="space-y-8">
+            {/* Section: Personal Identity */}
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Personal Profile Node</span>
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Department Node</label>
-                <select 
-                  value={dna.dept} 
-                  onChange={e => setDna({...dna, dept: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Select Department</option>
-                  {deptOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Temporal Stage (Year)</label>
-                <select 
-                  value={dna.year} 
-                  onChange={e => setDna({...dna, year: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Select Year</option>
-                  {yearOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Full Name</label>
+                <input 
+                  type="text"
+                  required
+                  value={displayName} 
+                  onChange={e => setDisplayName(e.target.value)} 
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm shadow-inner" 
+                  placeholder="e.g. Adit Chowdhury"
+                />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Section A: Academics */}
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Academic Matrix</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Department Node</label>
+                  <select 
+                    value={dna.dept} 
+                    onChange={e => setDna({...dna, dept: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Select Department</option>
+                    {deptOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Temporal Stage (Year)</label>
+                  <select 
+                    value={dna.year} 
+                    onChange={e => setDna({...dna, year: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Select Year</option>
+                    {yearOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section B: Ambition & Context */}
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Ambition Core</span>
               <div className="space-y-2">
-                <label className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-widest">Primary Ambition</label>
-                <input value={dna.goals} onChange={e => setDna({...dna, goals: e.target.value})} className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner" placeholder="e.g. Software Engineer at Therap" />
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Primary Ambition</label>
+                <input 
+                  value={dna.goals} 
+                  onChange={e => setDna({...dna, goals: e.target.value})} 
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm shadow-inner" 
+                  placeholder="e.g. Software Engineer, Civil Servant, Banker"
+                />
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['BCS / Civil Service', 'Software Engineer', 'Bank Job', 'Higher Studies', 'Entrepreneur'].map(s => (
-                    <button key={s} type="button" onClick={() => setDna({...dna, goals: s})} className="text-[8px] font-black uppercase bg-[#ffd700]/10 hover:bg-[#ffd700]/30 px-2.5 py-1 rounded-full text-[#006a4e] transition-colors">
+                    <button key={s} type="button" onClick={() => setDna({...dna, goals: s})} className="text-[8px] font-black uppercase bg-[#ffd700]/10 hover:bg-[#ffd700]/30 px-2.5 py-1 rounded-full text-[#006a4e] transition-all">
                       {s}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-widest">Development Stage</label>
-                <select 
-                  value={dna.goalStage} 
-                  onChange={e => setDna({...dna, goalStage: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  {goalStageOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
 
-          {/* Section 2: Psychographic Research */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black text-[#006a4e] uppercase tracking-[0.2em] border-b border-gray-100 pb-2">Psychographic & Motivation Research</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Primary Motivation</label>
-                <select 
-                  value={dna.motivation} 
-                  onChange={e => setDna({...dna, motivation: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">What drives you?</option>
-                  {motivationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Market Preference</label>
-                <select 
-                  value={dna.marketPreference} 
-                  onChange={e => setDna({...dna, marketPreference: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Target Market</option>
-                  {marketOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Development Stage</label>
+                  <select 
+                    value={dna.goalStage} 
+                    onChange={e => setDna({...dna, goalStage: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    {goalStageOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Target Market Selection</label>
+                  <select 
+                    value={dna.marketPreference} 
+                    onChange={e => setDna({...dna, marketPreference: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Target Market</option>
+                    {marketOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Work Style Node</label>
-                <select 
-                  value={dna.workStyle} 
-                  onChange={e => setDna({...dna, workStyle: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">How do you work best?</option>
-                  {styleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
+            {/* Section C: Character Traits */}
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Psychographic Vectors</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Primary Motivation</label>
+                  <select 
+                    value={dna.motivation} 
+                    onChange={e => setDna({...dna, motivation: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">What drives you?</option>
+                    {motivationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Ideal Work Style</label>
+                  <select 
+                    value={dna.workStyle} 
+                    onChange={e => setDna({...dna, workStyle: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Best work environments</option>
+                    {styleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">10-Year Vision</label>
-                <select 
-                  value={dna.vision10Years} 
-                  onChange={e => setDna({...dna, vision10Years: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Where do you see yourself?</option>
-                  {visionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">10-Year Long-Term Vision</label>
+                  <select 
+                    value={dna.vision10Years} 
+                    onChange={e => setDna({...dna, vision10Years: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Future self projection</option>
+                    {visionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Obstruction Factor</label>
+                  <select 
+                    value={dna.majorObstacle} 
+                    onChange={e => setDna({...dna, majorObstacle: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Biggest barrier</option>
+                    {obstacleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Section 3: Skill Synthesis */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black text-[#006a4e] uppercase tracking-[0.2em] border-b border-gray-100 pb-2">Skill & Resource Synthesis</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Top Strength Node</label>
-                <select 
-                  value={dna.topStrengths} 
-                  onChange={e => setDna({...dna, topStrengths: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Your strongest asset</option>
-                  {strengthOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Improvement Focus</label>
-                <select 
-                  value={dna.improvementAreas} 
-                  onChange={e => setDna({...dna, improvementAreas: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Area for growth</option>
-                  {improvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
+            {/* Section D: Talents & Capabilities */}
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Functional Talents</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Top Native Strength</label>
+                  <select 
+                    value={dna.topStrengths} 
+                    onChange={e => setDna({...dna, topStrengths: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Your strongest asset</option>
+                    {strengthOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Desired Growth Area</label>
+                  <select 
+                    value={dna.improvementAreas} 
+                    onChange={e => setDna({...dna, improvementAreas: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Growth focus</option>
+                    {improvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-widest">Primary Obstacle</label>
-              <select 
-                value={dna.majorObstacle} 
-                onChange={e => setDna({...dna, majorObstacle: e.target.value})} 
-                className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
+            {/* Section E: Extracurricular and Habits */}
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#006a4e]/70 border-b border-gray-100 pb-1 block">Extracurricular Nodes & Detailed Narrative</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Previous Club Sector</label>
+                  <select 
+                    value={dna.previousInvolvement} 
+                    onChange={e => setDna({...dna, previousInvolvement: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Select past involvement</option>
+                    {involvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Active TSC Node involvement</label>
+                  <select 
+                    value={dna.currentInvolvement} 
+                    onChange={e => setDna({...dna, currentInvolvement: e.target.value})} 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="">Select current node involvement</option>
+                    {involvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Habits & Specific Tech/Life Experiences</label>
+                <textarea 
+                  value={dna.habits} 
+                  onChange={e => setDna({...dna, habits: e.target.value})} 
+                  placeholder="Summarize daily routines, digital technologies used, or practical hands-on experiences."
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-medium text-gray-600 text-sm h-28 shadow-inner leading-relaxed" 
+                />
+              </div>
+            </div>
+
+            {/* Actions Panel */}
+            <div className="pt-4 flex flex-col md:flex-row gap-4">
+              <button 
+                type="button"
+                onClick={handleSaveOnly}
+                disabled={saving}
+                className="flex-1 py-4 bg-gray-100 text-[#006a4e] rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#006a4e]/5 transition-all flex items-center justify-center gap-2"
               >
-                <option value="">What slows you down?</option>
-                {obstacleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Save Coordinates</>}
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleDeepAISynthesis}
+                disabled={generatingRoadmap}
+                className="flex-1 py-4 bg-[#006a4e] text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-[#006a4e]/10 hover:scale-[1.01] hover:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-5 h-5 text-[#ffd700]" /> Forging Deep AI Roadmap
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Right Column (Dynamic Recommendation and Instant Feedback Studio) */}
+        <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-8 self-start">
+          {/* Main Feedback Box */}
+          <div className="bg-gray-900 p-6 md:p-8 rounded-3xl text-white shadow-xl space-y-8 border-2 border-[#10b981]/20">
+            {/* Pulsing Active Node header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10b981]"></span>
+                </span>
+                <span className="font-mono text-[9px] font-black text-gray-400 uppercase tracking-widest">COGNITIVE MATCH ENGINE</span>
+              </div>
+              <span className="px-2.5 py-1 bg-[#10b981]/10 rounded-full text-[8px] font-black uppercase text-[#10b981] tracking-widest">
+                0ms Latency Feed
+              </span>
+            </div>
+
+            {/* Instant Pathway Guideline Milestone */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-[#ffd700]">
+                <Target className="w-5 h-5" />
+                <h5 className="font-display font-black text-base uppercase tracking-tight">Temporal Stage Focus</h5>
+              </div>
+              <div className="bg-white/5 border border-white/5 p-4 rounded-2xl">
+                <p className="text-xs text-white/80 font-medium leading-relaxed italic">
+                  "{feedback.ageGuidance}"
+                </p>
+              </div>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                Target milestones adapted dynamically to {dna.year || 'general status'}.
+              </p>
+            </div>
+
+            {/* Club Scores Dynamic List */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-emerald-400">
+                <Users className="w-5 h-5" />
+                <h5 className="font-display font-black text-base uppercase tracking-tight">Best Society Resonance</h5>
+              </div>
+              <p className="text-[10px] font-medium text-gray-400 leading-relaxed italic mt-1">
+                Your parameters suggest high compatibility with these Rajshahi University extra-curricular structures:
+              </p>
+              
+              <div className="space-y-3">
+                {feedback.recommendedClubs.map((club, idx) => (
+                  <div key={club.id} className="relative overflow-hidden bg-white/5 border border-white/5 p-4 rounded-2xl flex flex-col gap-2 group hover:border-[#10b981]/30 transition-all">
+                    {/* Progress score bar alignment background overlay */}
+                    <div className="absolute top-0 left-0 bottom-0 bg-emerald-500/5 transition-all" style={{ width: `${club.score * 100}%` }} />
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="font-mono text-[8px] font-black bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{club.id}</span>
+                        <h6 className="font-bold text-sm text-white line-clamp-1 truncate block">{club.name}</h6>
+                      </div>
+                      <span className="font-mono font-black text-xs text-emerald-400">{(club.score * 100).toFixed(0)}% Match</span>
+                    </div>
+                    <p className="relative z-10 text-[10px] text-gray-400 italic line-clamp-1">"{club.description}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Active Campus Event Alignment Heuristic */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-[#ffd700]">
+                <Calendar className="w-5 h-5" />
+                <h5 className="font-display font-black text-base uppercase tracking-tight">Custom Events Match-ups</h5>
+              </div>
+
+              {feedback.recommendedEvents.length === 0 ? (
+                <div className="bg-white/5 border border-white/5 p-4 rounded-xl text-center text-[11px] italic text-gray-400">
+                  No upcoming active club events detected in database.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {feedback.recommendedEvents.map((ev, i) => (
+                    <div key={ev.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex flex-col gap-2 hover:border-[#ffd700]/30 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] font-black uppercase text-gray-500 tracking-wider">Matched Event Node</span>
+                        <span className="font-mono font-black text-[9px] text-[#ffd700]">{(ev.score * 100).toFixed(0)}% Score</span>
+                      </div>
+                      <h6 className="font-bold text-xs text-white line-clamp-1">{ev.title}</h6>
+                      <p className="text-[10px] text-gray-400 italic block">Organized by {ev.adminName || 'TSC Society'}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Section 4: Activities History */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black text-[#006a4e] uppercase tracking-[0.2em] border-b border-gray-100 pb-2">Societal & Community Involvement</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-widest">Previous Club/Society DNA</label>
-                <select 
-                  value={dna.previousInvolvement} 
-                  onChange={e => setDna({...dna, previousInvolvement: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Select Previous Primary Area</option>
-                  {involvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-widest">Current Active Nodes</label>
-                <select 
-                  value={dna.currentInvolvement} 
-                  onChange={e => setDna({...dna, currentInvolvement: e.target.value})} 
-                  className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-bold text-gray-900 shadow-inner appearance-none cursor-pointer"
-                >
-                  <option value="">Select Current Primary Area</option>
-                  {involvementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Technical habits & Detailed Experiences</label>
-            <textarea 
-              value={dna.habits} 
-              onChange={e => setDna({...dna, habits: e.target.value})} 
-              placeholder="What specific tools or methods do you use daily?"
-              className="w-full p-4 md:p-6 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#006a4e] outline-none transition-all font-medium text-gray-600 h-32 md:h-40 shadow-inner leading-relaxed" 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={saving}
-            className="w-full py-4 md:py-6 bg-[#006a4e] text-white rounded-xl md:rounded-2xl font-black text-lg shadow-xl shadow-[#006a4e]/10 hover:scale-[1.01] transition-all flex items-center justify-center gap-4"
-          >
-            {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Save className="w-6 h-6 text-[#ffd700]" /> Calibrate DNA Node</>}
-          </button>
-        </form>
-
-        <div className="mt-16 pt-16 border-t border-gray-100 space-y-8">
-           <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e]">
-                <Cpu className="w-8 h-8" />
+          {/* AI Settings Quick Link Section */}
+          <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#006a4e]">
+                <Cpu className="w-6 h-6 animate-pulse" />
               </div>
               <div>
-                <h4 className="text-2xl font-display font-black text-gray-900">AI Infrastructure</h4>
-                <p className="text-sm font-medium text-gray-400">Manage your Gemini processing key</p>
+                <h4 className="font-display font-black text-lg text-gray-900 tracking-tight">Neural API Credential</h4>
+                <p className="text-xs font-medium text-gray-400">Calibrate local Gemini key</p>
               </div>
-           </div>
-           <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
-             To power the expert multimodal navigation features, you can provide your own Gemini API key. 
-             This key is stored locally in your browser and used only for your sessions.
-           </p>
-           <button 
-             onClick={() => window.dispatchEvent(new CustomEvent('switchTab', { detail: 'settings' }))}
-             className="px-8 py-4 bg-gray-50 text-[#006a4e] rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#006a4e] hover:text-white transition-all border border-[#006a4e]/10"
-           >
-             Configure API Node
-           </button>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed max-w-sm">
+              Your AI-driven success roadmaps are compiled using Google Gemini models. To maximize processing velocity, supply your unique Gemini API Key.
+            </p>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('switchTab', { detail: 'settings' }))}
+              className="px-6 py-3 bg-gray-50 text-[#006a4e] leading-none rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#006a4e] hover:text-white transition-all border border-[#006a4e]/10 inline-block"
+            >
+              Configure API Node
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -980,9 +2073,9 @@ function CareerDatabase({ resources }: { resources: CareerResource[] }) {
 
 function HubCard({ title, subtitle, icon, items, summary, onAction, actionText, color }: any) {
   const colorStyles: any = {
-    purple: 'bg-purple-50 text-purple-600',
-    blue: 'bg-blue-50 text-blue-600',
-    orange: 'bg-orange-50 text-orange-600',
+    red: 'bg-red-50 text-[#D11226]',
+    blue: 'bg-sky-50 text-[#00A3E0]',
+    gold: 'bg-amber-50 text-amber-500',
     green: 'bg-emerald-50 text-[#006a4e]'
   };
 
@@ -1109,6 +2202,50 @@ const EventCard: React.FC<EventCardProps> = ({ event, type, onFeedbackClick }) =
               <p className="text-xs md:text-base font-black text-gray-900 leading-none mt-1">{event.venue || event.location}</p>
             </div>
           </div>
+          {event.mentors && (
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-purple-600 shadow-sm border border-gray-100 shrink-0">
+                <User className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div>
+                <p className="text-[8px] md:text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Mentor / Speaker</p>
+                <p className="text-xs md:text-base font-black text-gray-900 leading-none mt-1">{event.mentors}</p>
+              </div>
+            </div>
+          )}
+          {event.fee && (
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-gray-100 shrink-0">
+                <DollarSign className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div>
+                <p className="text-[8px] md:text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Registration Fee</p>
+                <p className="text-xs md:text-base font-black text-gray-900 leading-none mt-1">{event.fee}</p>
+              </div>
+            </div>
+          )}
+          {event.duration && (
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-gray-100 shrink-0">
+                <Cpu className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div>
+                <p className="text-[8px] md:text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Event Duration</p>
+                <p className="text-xs md:text-base font-black text-gray-900 leading-none mt-1">{event.duration}</p>
+              </div>
+            </div>
+          )}
+          {event.skillsTargeted && (
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-orange-500 shadow-sm border border-gray-100 shrink-0">
+                <Target className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div>
+                <p className="text-[8px] md:text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Targeted Skills</p>
+                <p className="text-xs md:text-base font-black text-gray-900 leading-none mt-1">{event.skillsTargeted}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

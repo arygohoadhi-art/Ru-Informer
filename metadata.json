@@ -2,5 +2,7 @@
   "name": "RU Informer AI",
   "description": "The official AI mentor for Rajshahi University students. Bridging the gap between academics and extra-curricular success with personalized club recommendations, alumni success paths, and 4-year career roadmaps.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
